@@ -42,8 +42,6 @@
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
-- [Documents](#documents)
-- [Hackathon Evaluation](#hackathon-evaluation)
 - [Cost & Pricing](#cost--pricing)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
