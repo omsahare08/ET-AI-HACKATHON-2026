@@ -1,4 +1,3 @@
-
 <div align="center">
 
 ```
@@ -14,11 +13,15 @@
 
 **Autonomous AI agents that find cost leakage, prevent SLA breaches, and execute corrective actions — with quantifiable financial impact.**
 
+
 <br/>
 
 > 💡 **$4.28M** in savings identified · **4** autonomous agents · **847** signals/min · **8,024% ROI**
 
 <br/>
+
+
+
 </div>
 
 ---
@@ -307,13 +310,9 @@ Event Bus (Pub/Sub)
 | AI / LLM | OpenAI GPT-4o-mini via REST API |
 | Fonts | Google Fonts (Space Mono, Syne, JetBrains Mono) |
 | Charts | Pure CSS + SVG (no chart library) |
-| PDF Generation | Python ReportLab 4.4 |
-| DOCX Generation | Node.js docx 9.5 |
-| Deployment | Any static file server / CDN |
 
 
 ---
-
 
 ### What the Agents Actually Do (Demo)
 
@@ -390,6 +389,7 @@ Contributions are welcome! Here's what would make NEXUS even better:
 - [ ] **Custom thresholds** — Let users configure risk score boundaries and severity cutoffs
 - [ ] **Multi-tenant mode** — Separate data contexts per business unit or department
 
+---
 
 ## License
 
