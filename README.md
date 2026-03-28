@@ -267,14 +267,9 @@ nexus-cost-intelligence/
 ├── README.md                       # This file
 │
 ├── docs/
-│   ├── NEXUS_Architecture_Document.pdf    # System architecture (2 pages)
-│   ├── NEXUS_Architecture_Document.docx  # Architecture document (Word)
-│   └── NEXUS_Impact_Model.pdf            # Business impact model (2 pages)
-│
-└── scripts/
-    ├── build_arch_pdf.py           # Architecture PDF generator (Python/ReportLab)
-    ├── build_impact_pdf.py         # Impact Model PDF generator (Python/ReportLab)
-    └── gen_arch_doc.js             # Architecture DOCX generator (Node.js/docx)
+    ├── NEXUS_Architecture_Document.pdf    # System architecture (2 pages)
+    └── NEXUS_Impact_Model.pdf            # Business impact model (2 pages)
+
 ```
 
 > The entire frontend application lives in **`index.html`** — a single self-contained file with zero runtime dependencies, zero build tools, and zero npm packages required.
@@ -324,30 +319,9 @@ Event Bus (Pub/Sub)
 | DOCX Generation | Node.js docx 9.5 |
 | Deployment | Any static file server / CDN |
 
----
-
-## Documents
-
-| Document | Description | Format |
-|---|---|---|
-| [`NEXUS_Architecture_Document.pdf`](docs/NEXUS_Architecture_Document.pdf) | System architecture — agent roles, communication model, tool integrations, error handling | PDF · 2 pages |
-| [`NEXUS_Architecture_Document.docx`](docs/NEXUS_Architecture_Document.docx) | Same content as Word document for editing | DOCX · 2 pages |
-| [`NEXUS_Impact_Model.pdf`](docs/NEXUS_Impact_Model.pdf) | Business impact model — cost reduction, time saved, revenue protected, full ROI math | PDF · 2 pages |
 
 ---
 
-## Hackathon Evaluation
-
-This project was built for the **AI Hackathon 2026** under the problem statement: *"Build an AI system that goes beyond dashboards — continuously monitor enterprise operations data, identify cost leakage or inefficiency patterns, and initiate corrective actions with quantifiable financial impact."*
-
-### Judging Criteria Coverage
-
-| Criterion | How NEXUS addresses it |
-|---|---|
-| **Quantifiable cost impact** | Every anomaly shows full math: formula, break-even, NPV. Impact Model PDF has line-by-line calculation with stated assumptions. |
-| **Ability to take action** | 3-track action system: auto-execute (risk < 30), approval queue (30–70), playbook (> 70). Agents auto-reroute SLA tickets without human input. |
-| **Data integration depth** | 4 agent types across procurement, cloud infra, SaaS licensing, and financial operations. 9 tool integrations documented. |
-| **Enterprise approval workflows** | Full approval queue with approve/decline/bulk-approve. Playbooks show AUTO vs HUMAN gate steps. Risk score determines routing. |
 
 ### What the Agents Actually Do (Demo)
 
