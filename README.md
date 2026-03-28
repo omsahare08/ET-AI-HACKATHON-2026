@@ -13,13 +13,17 @@
 
 **Autonomous AI agents that find cost leakage, prevent SLA breaches, and execute corrective actions — with quantifiable financial impact.**
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](https://opensource.org/licenses/MIT)
+[![OpenAI](https://img.shields.io/badge/Powered%20by-GPT--4o--mini-green.svg)](https://platform.openai.com)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen.svg)]()
+[![Single File](https://img.shields.io/badge/Deploy-Single%20HTML%20File-blue.svg)]()
+[![Hackathon](https://img.shields.io/badge/Built%20for-AI%20Hackathon%202026-purple.svg)]()
 
 <br/>
 
 > 💡 **$4.28M** in savings identified · **4** autonomous agents · **847** signals/min · **8,024% ROI**
 
 <br/>
-
 
 
 </div>
