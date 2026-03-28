@@ -1,0 +1,2331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Enterprise Cost Intelligence</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #040608;
+  --surface: #080d12;
+  --surface2: #0d1520;
+  --border: #1a2535;
+  --border2: #243040;
+  --accent: #00d4ff;
+  --accent2: #00ff88;
+  --accent3: #ff6b35;
+  --accent4: #a855f7;
+  --danger: #ff3b5c;
+  --warn: #ffb700;
+  --text: #e8f0fe;
+  --text2: #8899aa;
+  --text3: #4a5568;
+  --green: #00ff88;
+  --red: #ff3b5c;
+  --card-glow: rgba(0,212,255,0.04);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid noise overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0,212,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 230px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-mark {
+  font-family: 'Space Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -1px;
+  text-shadow: 0 0 20px rgba(0,212,255,0.5);
+}
+.logo-sub {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--text3);
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+.nav { padding: 16px 0; flex: 1; overflow-y: auto; }
+.nav-section-title {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--text3);
+  padding: 16px 20px 6px;
+  text-transform: uppercase;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.2s;
+  font-size: 13px;
+  color: var(--text2);
+  position: relative;
+}
+.nav-item:hover { color: var(--text); background: rgba(0,212,255,0.03); }
+.nav-item.active {
+  color: var(--accent);
+  background: rgba(0,212,255,0.06);
+  border-left-color: var(--accent);
+}
+.nav-item .badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: #fff;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.nav-item .badge.warn { background: var(--warn); color: #000; }
+.nav-item .badge.ok { background: var(--green); color: #000; }
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+.agent-pulse {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text3);
+}
+.pulse-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,255,136,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(0,255,136,0); }
+}
+
+/* ── MAIN ── */
+.main {
+  margin-left: 230px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+.topbar {
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topbar-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.topbar-subtitle { font-size: 12px; color: var(--text3); margin-left: 4px; }
+
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.time-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.btn {
+  padding: 7px 14px;
+  border-radius: 5px;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+}
+.btn-primary:hover { background: #33ddff; box-shadow: 0 0 16px rgba(0,212,255,0.4); }
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+.btn-danger:hover { box-shadow: 0 0 16px rgba(255,59,92,0.4); }
+.btn-success {
+  background: var(--green);
+  color: #000;
+}
+
+.content { padding: 24px 28px; }
+
+/* ── METRIC CARDS ── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.metric-card:hover { border-color: var(--border2); }
+.metric-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.metric-card.blue::after { background: var(--accent); }
+.metric-card.green::after { background: var(--green); }
+.metric-card.red::after { background: var(--danger); }
+.metric-card.purple::after { background: var(--accent4); }
+.metric-card.orange::after { background: var(--accent3); }
+
+.metric-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.metric-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.metric-value.green { color: var(--green); }
+.metric-value.red { color: var(--danger); }
+.metric-value.blue { color: var(--accent); }
+.metric-value.warn { color: var(--warn); }
+
+.metric-delta {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text3);
+}
+.delta-pos { color: var(--green); }
+.delta-neg { color: var(--danger); }
+
+/* ── SECTION HEADERS ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::before {
+  content: '';
+  width: 3px; height: 14px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* ── AGENT CARDS ── */
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.agent-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  position: relative;
+}
+
+.agent-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.agent-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.agent-type {
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.agent-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.status-active {
+  background: rgba(0,255,136,0.1);
+  color: var(--green);
+  border: 1px solid rgba(0,255,136,0.2);
+}
+.status-alert {
+  background: rgba(255,59,92,0.1);
+  color: var(--danger);
+  border: 1px solid rgba(255,59,92,0.2);
+}
+.status-processing {
+  background: rgba(0,212,255,0.1);
+  color: var(--accent);
+  border: 1px solid rgba(0,212,255,0.2);
+}
+.status-warn {
+  background: rgba(255,183,0,0.1);
+  color: var(--warn);
+  border: 1px solid rgba(255,183,0,0.2);
+}
+
+.agent-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px;
+  background: var(--surface2);
+  border-radius: 6px;
+}
+.agent-stat-label { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+.agent-stat-value { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; }
+
+.agent-log {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  line-height: 1.8;
+  max-height: 80px;
+  overflow: hidden;
+}
+.log-line { display: flex; gap: 8px; }
+.log-time { color: var(--text3); min-width: 45px; }
+.log-msg { color: var(--text2); }
+.log-msg.alert { color: var(--danger); }
+.log-msg.success { color: var(--green); }
+.log-msg.info { color: var(--accent); }
+.log-msg.warn { color: var(--warn); }
+
+.agent-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── ANOMALIES TABLE ── */
+.table-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+table { width: 100%; border-collapse: collapse; }
+thead {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-weight: 600;
+}
+td {
+  padding: 12px 16px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(0,212,255,0.02); }
+
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+.sev-critical { background: rgba(255,59,92,0.15); color: var(--danger); border: 1px solid rgba(255,59,92,0.3); }
+.sev-high { background: rgba(255,183,0,0.15); color: var(--warn); border: 1px solid rgba(255,183,0,0.3); }
+.sev-medium { background: rgba(168,85,247,0.15); color: var(--accent4); border: 1px solid rgba(168,85,247,0.3); }
+.sev-low { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+
+.impact-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--danger);
+}
+.impact-val.pos { color: var(--green); }
+
+.action-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  font-family: 'Syne', sans-serif;
+  transition: all 0.2s;
+}
+.action-badge:hover { border-color: var(--accent); color: var(--accent); }
+.action-badge.executed {
+  background: rgba(0,255,136,0.1);
+  border-color: rgba(0,255,136,0.3);
+  color: var(--green);
+}
+.action-badge.pending {
+  background: rgba(255,183,0,0.1);
+  border-color: rgba(255,183,0,0.3);
+  color: var(--warn);
+}
+
+/* ── 2-COLUMN LAYOUT ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+/* ── APPROVAL QUEUE ── */
+.approval-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.approval-item {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.approval-item:last-child { border-bottom: none; }
+.approval-icon {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.icon-blue { background: rgba(0,212,255,0.15); }
+.icon-green { background: rgba(0,255,136,0.15); }
+.icon-red { background: rgba(255,59,92,0.15); }
+.icon-orange { background: rgba(255,107,53,0.15); }
+.icon-purple { background: rgba(168,85,247,0.15); }
+
+.approval-body { flex: 1; }
+.approval-title { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+.approval-desc { font-size: 11px; color: var(--text3); margin-bottom: 8px; line-height: 1.5; }
+.approval-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.approval-impact {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+}
+.approval-urgency { font-size: 10px; color: var(--text3); }
+.approval-btns { display: flex; gap: 6px; margin-top: 8px; }
+.btn-sm {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: 'Syne', sans-serif;
+  transition: all 0.15s;
+}
+.btn-sm-approve { background: var(--green); color: #000; }
+.btn-sm-approve:hover { box-shadow: 0 0 10px rgba(0,255,136,0.3); }
+.btn-sm-decline { background: transparent; border: 1px solid var(--border2); color: var(--text3); }
+.btn-sm-decline:hover { border-color: var(--danger); color: var(--danger); }
+.btn-sm-review { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+
+/* ── PLAYBOOK PANEL ── */
+.playbook-step {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.playbook-step:last-child { border-bottom: none; }
+.step-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text3);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.step-num.done {
+  background: var(--green);
+  border-color: var(--green);
+  color: #000;
+}
+.step-num.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+  animation: blink 1s infinite;
+}
+@keyframes blink {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,212,255,0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(0,212,255,0); }
+}
+.step-content { flex: 1; }
+.step-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.step-desc { font-size: 11px; color: var(--text3); }
+.step-tag {
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  margin-left: auto;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.tag-auto { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+.tag-human { background: rgba(255,183,0,0.1); color: var(--warn); border: 1px solid rgba(255,183,0,0.2); }
+.tag-done { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.2); }
+
+/* ── FINANCIAL VARIANCE ── */
+.variance-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 90px 90px 90px;
+  gap: 12px;
+  padding: 10px 16px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.variance-row:last-child { border-bottom: none; }
+.variance-row.header {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  background: var(--surface2);
+  padding: 8px 16px;
+}
+.progress-bar {
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.8s ease;
+}
+.fill-over { background: var(--danger); }
+.fill-ok { background: var(--green); }
+.fill-warn { background: var(--warn); }
+
+/* ── MINI CHART ── */
+.sparkline-container { display: flex; align-items: flex-end; gap: 2px; height: 30px; }
+.spark-bar {
+  flex: 1;
+  border-radius: 1px 1px 0 0;
+  min-width: 4px;
+  background: var(--accent);
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.spark-bar:hover { opacity: 1; }
+.spark-bar.high { background: var(--danger); }
+
+/* ── SLA MONITOR ── */
+.sla-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.sla-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.sla-name { font-size: 12px; font-weight: 600; }
+.sla-risk {
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.risk-critical { background: rgba(255,59,92,0.2); color: var(--danger); }
+.risk-high { background: rgba(255,183,0,0.2); color: var(--warn); }
+.risk-low { background: rgba(0,255,136,0.1); color: var(--green); }
+
+.sla-progress-track {
+  height: 6px;
+  background: var(--surface);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.sla-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+.sla-meta { display: flex; justify-content: space-between; font-size: 10px; color: var(--text3); }
+.sla-penalty { color: var(--danger); font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.tab {
+  padding: 10px 18px;
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  color: var(--text3);
+  transition: all 0.2s;
+  font-weight: 500;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── AI CHAT PANEL ── */
+.ai-chat-panel {
+  position: fixed;
+  right: 0; top: 56px; bottom: 0;
+  width: 360px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 200;
+}
+.ai-chat-panel.open { transform: translateX(0); }
+.chat-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.chat-title { font-size: 13px; font-weight: 700; }
+.chat-close {
+  cursor: pointer;
+  color: var(--text3);
+  font-size: 18px;
+  line-height: 1;
+}
+.chat-close:hover { color: var(--text); }
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chat-msg {
+  max-width: 85%;
+  padding: 10px 13px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.chat-msg.ai {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  align-self: flex-start;
+}
+.chat-msg.user {
+  background: var(--accent);
+  color: #000;
+  align-self: flex-end;
+  font-weight: 500;
+}
+.chat-msg.ai .msg-label {
+  font-size: 9px;
+  color: var(--accent);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+  font-weight: 700;
+}
+.chat-input-area {
+  padding: 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+.chat-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  resize: none;
+  height: 40px;
+  outline: none;
+}
+.chat-input:focus { border-color: var(--accent); }
+.chat-input::placeholder { color: var(--text3); }
+.chat-send {
+  width: 40px; height: 40px;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #000;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.chat-send:hover { background: #33ddff; }
+.chat-thinking {
+  display: flex;
+  gap: 4px;
+  padding: 10px 13px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  align-self: flex-start;
+}
+.think-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text3);
+  animation: think 1.4s infinite;
+}
+.think-dot:nth-child(2) { animation-delay: 0.2s; }
+.think-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes think {
+  0%,80%,100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* ── COST IMPACT MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  width: 560px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title { font-size: 15px; font-weight: 700; }
+.modal-close { cursor: pointer; color: var(--text3); font-size: 20px; }
+.modal-body { padding: 22px; }
+.math-block {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 2;
+}
+.math-label { color: var(--text3); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.math-result {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--green);
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.highlight-num { color: var(--accent); }
+.highlight-neg { color: var(--danger); }
+
+/* ── NOTIFICATION TOAST ── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 500;
+}
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 280px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+@keyframes slideIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.toast-icon { font-size: 16px; margin-top: 1px; }
+.toast-content { flex: 1; }
+.toast-title { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
+.toast-msg { font-size: 11px; color: var(--text3); }
+.toast.toast-success { border-left: 3px solid var(--green); }
+.toast.toast-danger { border-left: 3px solid var(--danger); }
+.toast.toast-info { border-left: 3px solid var(--accent); }
+.toast.toast-warn { border-left: 3px solid var(--warn); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ── LOADING BAR ── */
+.loading-bar {
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--green), var(--accent));
+  background-size: 200% 100%;
+  animation: loadAnim 2s linear infinite;
+  border-radius: 1px;
+}
+@keyframes loadAnim { 0%{background-position:0%} 100%{background-position:200%} }
+
+/* ── ANIMATE IN ── */
+.fade-in { animation: fadeUp 0.5s ease both; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1200px) {
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .agents-grid { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">NEXUS</div>
+    <div class="logo-sub">Cost Intelligence OS</div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section-title">Command Center</div>
+    <div class="nav-item active" onclick="switchView('dashboard')">
+      <span>⬡</span> Overview Dashboard
+    </div>
+    <div class="nav-item" onclick="switchView('agents')">
+      <span>◈</span> AI Agents
+      <span class="badge">4</span>
+    </div>
+
+    <div class="nav-section-title">Intelligence</div>
+    <div class="nav-item" onclick="switchView('anomalies')">
+      <span>◉</span> Anomaly Detection
+      <span class="badge">12</span>
+    </div>
+    <div class="nav-item" onclick="switchView('sla')">
+      <span>◷</span> SLA Monitor
+      <span class="badge warn">3</span>
+    </div>
+    <div class="nav-item" onclick="switchView('spend')">
+      <span>◈</span> Spend Intelligence
+    </div>
+
+    <div class="nav-section-title">Operations</div>
+    <div class="nav-item" onclick="switchView('approvals')">
+      <span>◻</span> Approval Queue
+      <span class="badge">7</span>
+    </div>
+    <div class="nav-item" onclick="switchView('playbooks')">
+      <span>▷</span> Playbooks
+    </div>
+    <div class="nav-item" onclick="switchView('variance')">
+      <span>≋</span> Financial Variance
+    </div>
+    <div class="nav-item" onclick="switchView('resources')">
+      <span>⊞</span> Resource Optimization
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="agent-pulse">
+      <div class="pulse-dot"></div>
+      <span>4 agents running · 847 signals/min</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <span class="topbar-title" id="topbar-title">Overview Dashboard</span>
+      <span class="topbar-subtitle" id="topbar-subtitle">— Live Enterprise Intelligence</span>
+    </div>
+    <div class="topbar-right">
+      <div class="time-chip" id="live-time">--:--:--</div>
+      <button class="btn btn-outline" onclick="showApiKeyModal()">🔑 OpenAI Key</button>
+      <button class="btn btn-outline" onclick="openChat()">🤖 Ask NEXUS AI</button>
+      <button class="btn btn-primary" onclick="runAllAgents()">▷ Run Agents</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="main-content">
+    <!-- Injected by JS -->
+  </div>
+</main>
+
+<!-- AI CHAT PANEL -->
+<div class="ai-chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <div>
+      <div class="chat-title">🤖 NEXUS Intelligence</div>
+      <div id="ai-provider-label" style="font-size:10px;color:var(--text3);margin-top:2px;">Powered by GPT-4o-mini · Enterprise Context Loaded</div>
+    </div>
+    <span class="chat-close" onclick="closeChat()">×</span>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg ai">
+      <div class="msg-label">NEXUS AI</div>
+      Hello! I have full visibility into your enterprise data. I can analyze cost anomalies, predict SLA breaches, recommend vendor consolidations, and generate financial variance reports. What would you like to investigate?
+    </div>
+  </div>
+  <div class="chat-input-area">
+    <textarea class="chat-input" id="chatInput" placeholder="Ask about costs, anomalies, SLAs..." onkeydown="chatKeydown(event)"></textarea>
+    <button class="chat-send" onclick="sendChat()">↑</button>
+  </div>
+</div>
+
+<!-- OPENAI API KEY MODAL -->
+<div class="modal-overlay" id="apiKeyModal">
+  <div class="modal" style="width:500px">
+    <div class="modal-header">
+      <div class="modal-title">🔑 Connect OpenAI API</div>
+      <span class="modal-close" onclick="closeApiKeyModal()">×</span>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.7">
+        NEXUS uses <strong style="color:var(--accent)">OpenAI GPT-4o-mini</strong> to power the AI chat assistant. It's fast, cheap, and works instantly with any OpenAI account. Enter your API key below — stored only in your browser's localStorage.
+      </div>
+      <div style="margin-bottom:8px;font-size:11px;color:var(--text3)">HOW TO GET YOUR KEY (2 MINUTES)</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-size:11px;color:var(--text2);line-height:2.2;margin-bottom:16px">
+        1. Go to <span style="color:var(--accent);font-family:'JetBrains Mono',monospace">platform.openai.com/api-keys</span><br>
+        2. Sign in / create a free OpenAI account<br>
+        3. Click <strong>+ Create new secret key</strong><br>
+        4. Copy the key — starts with <span style="font-family:'JetBrains Mono',monospace;color:var(--green)">sk-...</span><br>
+        5. Add a small credit ($5) under <strong>Billing</strong> — GPT-4o-mini costs ~$0.0001 per chat message
+      </div>
+      <div style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.2);border-radius:6px;padding:10px 14px;font-size:11px;color:var(--accent);margin-bottom:16px">
+        💡 <strong>Why GPT-4o-mini?</strong> It's OpenAI's fastest + cheapest model. A full demo session costs less than ₹0.50 (less than 1 paisa per message).
+      </div>
+      <div style="margin-bottom:8px;font-size:11px;color:var(--text3)">YOUR OPENAI API KEY</div>
+      <input id="apiKeyInput" type="password"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 14px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;margin-bottom:6px"
+        placeholder="sk-..."
+        onkeydown="apiKeyEnter(event)"
+        value="">
+      <div id="apiKeyError" style="font-size:11px;color:var(--danger);min-height:16px;margin-bottom:14px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="saveApiKey()" style="flex:1">✓ Save & Connect</button>
+        <button class="btn btn-outline" onclick="clearApiKey()">Clear Key</button>
+        <button class="btn btn-outline" onclick="closeApiKeyModal()">Cancel</button>
+      </div>
+      <div style="margin-top:14px;font-size:10px;color:var(--text3);text-align:center">
+        🔒 Key stored in browser localStorage only · sent only to api.openai.com · never logged
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COST IMPACT MODAL -->
+<div class="modal-overlay" id="impactModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Cost Impact Analysis</div>
+      <span class="modal-close" onclick="closeModal()">×</span>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA MODEL
+// ═══════════════════════════════════════════════════════════
+const DATA = {
+  metrics: {
+    totalSavingsIdentified: 4280000,
+    totalSavingsExecuted: 1847000,
+    activeAnomalies: 12,
+    slaRiskPenalty: 340000,
+    pendingApprovals: 7,
+    agentsActive: 4
+  },
+
+  agents: [
+    {
+      id: 'spend',
+      name: 'SpendIQ Agent',
+      type: 'SPEND INTELLIGENCE',
+      status: 'active',
+      statusLabel: 'ACTIVE',
+      signals: 312,
+      anomalies: 8,
+      savings: '$1.2M',
+      color: 'var(--accent)',
+      log: [
+        { t: '14:32', m: 'Detected duplicate SaaS subscription: Zoom + Webex', cls: 'alert' },
+        { t: '14:31', m: 'Rate optimization found: AWS Reserved → Savings Plan', cls: 'success' },
+        { t: '14:29', m: 'Scanning 847 vendor invoices...', cls: 'info' },
+        { t: '14:27', m: 'Flagged: Vendor XYZ overcharge +23% vs contract', cls: 'alert' },
+      ]
+    },
+    {
+      id: 'sla',
+      name: 'SLA Shield Agent',
+      type: 'SLA & PENALTY PREVENTION',
+      status: 'alert',
+      statusLabel: 'BREACH RISK',
+      signals: 241,
+      anomalies: 3,
+      savings: '$340K',
+      color: 'var(--danger)',
+      log: [
+        { t: '14:33', m: '⚠ Ticket #TK-8821 at 87% SLA threshold — rerouting', cls: 'alert' },
+        { t: '14:31', m: 'Auto-escalated 2 P1 tickets to Tier 3 support', cls: 'warn' },
+        { t: '14:28', m: 'Predicted breach prevented — $45K penalty avoided', cls: 'success' },
+        { t: '14:25', m: 'Monitoring 3 contracts with breach risk', cls: 'info' },
+      ]
+    },
+    {
+      id: 'resource',
+      name: 'ResourceX Agent',
+      type: 'RESOURCE OPTIMIZATION',
+      status: 'processing',
+      statusLabel: 'EXECUTING',
+      signals: 189,
+      anomalies: 2,
+      savings: '$890K',
+      color: 'var(--green)',
+      log: [
+        { t: '14:33', m: 'Rightsizing 14 EC2 instances (avg 8% utilization)', cls: 'info' },
+        { t: '14:30', m: 'Terminated 6 zombie cloud resources → $12K/mo saved', cls: 'success' },
+        { t: '14:28', m: 'License audit: 340 unused Tableau seats identified', cls: 'alert' },
+        { t: '14:25', m: 'Cross-region data transfer spike detected', cls: 'warn' },
+      ]
+    },
+    {
+      id: 'finops',
+      name: 'FinOps Agent',
+      type: 'FINANCIAL OPERATIONS',
+      status: 'active',
+      statusLabel: 'ACTIVE',
+      signals: 105,
+      anomalies: 4,
+      savings: '$2.1M',
+      color: 'var(--accent4)',
+      log: [
+        { t: '14:32', m: 'P&L variance reconciliation complete — Q3 close', cls: 'success' },
+        { t: '14:30', m: 'Root-cause: Marketing overspend +$180K vs budget', cls: 'alert' },
+        { t: '14:27', m: 'Duplicate invoice INV-8821 flagged for AP team', cls: 'warn' },
+        { t: '14:24', m: 'Accrual discrepancy resolved — $23K adjustment', cls: 'info' },
+      ]
+    }
+  ],
+
+  anomalies: [
+    { id: 'A-001', type: 'Duplicate SaaS', vendor: 'Zoom + Webex Overlap', impact: -87400, severity: 'critical', category: 'Procurement', status: 'pending', age: '2h' },
+    { id: 'A-002', type: 'Rate Arbitrage', vendor: 'AWS On-Demand → Reserved', impact: 342000, severity: 'high', category: 'Infrastructure', status: 'approved', age: '4h' },
+    { id: 'A-003', type: 'Contract Breach', vendor: 'Vendor XYZ Invoice #8812', impact: -23800, severity: 'critical', category: 'Procurement', status: 'pending', age: '1h' },
+    { id: 'A-004', type: 'Zombie Resources', vendor: '6 Idle EC2 Instances', impact: 144000, severity: 'high', category: 'Infrastructure', status: 'executed', age: '30m' },
+    { id: 'A-005', type: 'Unused Licenses', vendor: '340 Tableau Seats', impact: 204000, severity: 'high', category: 'Software', status: 'pending', age: '6h' },
+    { id: 'A-006', type: 'Vendor Duplicate', vendor: 'Invoice INV-8821 (AP)', impact: -4200, severity: 'medium', category: 'Finance', status: 'executed', age: '1h' },
+    { id: 'A-007', type: 'SLA Breach Risk', vendor: 'Customer Support Contract', impact: -45000, severity: 'critical', category: 'Operations', status: 'pending', age: '15m' },
+    { id: 'A-008', type: 'Budget Overrun', vendor: 'Marketing Department', impact: -180000, severity: 'high', category: 'Finance', status: 'pending', age: '1d' },
+    { id: 'A-009', type: 'Rate Optimization', vendor: 'Azure Blob → Coldline', impact: 58000, severity: 'medium', category: 'Infrastructure', status: 'approved', age: '3h' },
+    { id: 'A-010', type: 'Contract Renewal', vendor: 'Salesforce Enterprise', impact: -120000, severity: 'high', category: 'Procurement', status: 'pending', age: '2d' },
+  ],
+
+  slas: [
+    { name: 'Customer Support SLA', client: 'Acme Corp', target: 98, current: 93.2, penalty: 45000, risk: 'critical', timeLeft: '4h 12m', actions: ['Rerouting 18 tickets', 'Escalated to Tier 3'] },
+    { name: 'Incident Response SLA', client: 'GlobalBank Ltd', target: 99.5, current: 98.1, penalty: 120000, risk: 'high', timeLeft: '11h 30m', actions: ['On-call engineer alerted'] },
+    { name: 'Data Delivery SLA', client: 'RetailCo', target: 95, current: 94.1, penalty: 22000, risk: 'high', timeLeft: '6h 45m', actions: ['Pipeline failover initiated'] },
+    { name: 'API Uptime SLA', client: 'FinTech Partners', target: 99.9, current: 99.92, penalty: 85000, risk: 'low', timeLeft: '30d', actions: [] },
+    { name: 'Report Delivery SLA', client: 'HealthSys Inc', target: 97, current: 97.8, penalty: 15000, risk: 'low', timeLeft: '14d', actions: [] },
+  ],
+
+  approvals: [
+    { icon: '⚡', iconCls: 'icon-blue', title: 'Terminate 6 Idle EC2 Instances', desc: 'ResourceX identified 6 EC2 instances at <3% avg CPU for 30+ days. Auto-termination queued pending approval.', impact: '+$12,000/mo', urgency: 'Low risk · Reversible', type: 'resource' },
+    { icon: '🔄', iconCls: 'icon-green', title: 'Cancel 340 Unused Tableau Licenses', desc: 'Zero login activity for 90 days. Downgrade to Viewer tier for $600/seat/yr savings across 340 seats.', impact: '+$204,000/yr', urgency: 'Contract deadline: 5 days', type: 'software' },
+    { icon: '⚠', iconCls: 'icon-red', title: 'Dispute Invoice INV-XYZ-8812', desc: 'Vendor XYZ billed $23,800 above contracted rate for Oct. SpendIQ validated against master contract.', impact: '+$23,800 recovery', urgency: 'Net-30 dispute window closing', type: 'procurement' },
+    { icon: '📦', iconCls: 'icon-orange', title: 'Migrate AWS On-Demand → Reserved', desc: 'SpendIQ recommends 1-yr reserved instances for 34 workloads. 42% cost reduction vs current on-demand.', impact: '+$342,000/yr', urgency: 'Rate lock expires in 48h', type: 'infrastructure' },
+    { icon: '🔗', iconCls: 'icon-purple', title: 'Consolidate Zoom + Webex Contracts', desc: 'Both platforms active with 70% feature overlap. Standardize on Zoom, terminate Webex ($87,400/yr).', impact: '+$87,400/yr', urgency: 'Webex renewal in 12 days', type: 'procurement' },
+  ],
+
+  playbooks: {
+    saasConsolidation: {
+      title: 'SaaS Consolidation Playbook',
+      trigger: 'Duplicate platform detected (Zoom + Webex)',
+      steps: [
+        { num: 1, title: 'Identify Overlap', desc: 'Cross-reference active licenses, usage telemetry, feature sets', tag: 'auto', done: true },
+        { num: 2, title: 'Usage Analysis', desc: 'Pull 90-day login data, meeting counts, active user cohorts', tag: 'auto', done: true },
+        { num: 3, title: 'Cost Modeling', desc: 'Model 3 consolidation scenarios with NPV and transition costs', tag: 'auto', done: true },
+        { num: 4, title: 'Stakeholder Approval', desc: 'Route to IT Director + CFO for sign-off via workflow', tag: 'human', done: false, active: true },
+        { num: 5, title: 'Vendor Negotiation Brief', desc: 'Auto-generate negotiation playbook with leverage points', tag: 'auto', done: false },
+        { num: 6, title: 'Contract Termination', desc: 'Trigger Webex termination flow, export user data', tag: 'auto', done: false },
+        { num: 7, title: 'Verify & Close', desc: 'Confirm savings realized, update spend baseline', tag: 'auto', done: false },
+      ]
+    }
+  },
+
+  variance: [
+    { category: 'Cloud Infrastructure', budget: 1200000, actual: 1432000, variance: 232000, pct: 19.3 },
+    { category: 'SaaS Licenses', budget: 840000, actual: 927000, variance: 87000, pct: 10.4 },
+    { category: 'Marketing Spend', budget: 650000, actual: 830000, variance: 180000, pct: 27.7 },
+    { category: 'Vendor Services', budget: 520000, actual: 498000, variance: -22000, pct: -4.2 },
+    { category: 'People & Benefits', budget: 4200000, actual: 4180000, variance: -20000, pct: -0.5 },
+    { category: 'Facilities & Ops', budget: 380000, actual: 395000, variance: 15000, pct: 3.9 },
+  ],
+
+  resources: [
+    { name: 'EC2 Compute Fleet', utilization: 23, waste: '$48,200/mo', action: 'Rightsize 14 instances', savings: '$31,400/mo', status: 'pending' },
+    { name: 'Tableau Analytics', utilization: 41, waste: '$204,000/yr', action: 'Reclaim 340 licenses', savings: '$204,000/yr', status: 'pending' },
+    { name: 'S3 Storage (Hot)', utilization: 67, waste: '$8,400/mo', action: 'Move cold data to Glacier', savings: '$5,800/mo', status: 'executing' },
+    { name: 'Azure VMs (Dev)', utilization: 12, waste: '$22,000/mo', action: 'Schedule off-hours shutdown', savings: '$18,700/mo', status: 'done' },
+    { name: 'Salesforce Org', utilization: 55, waste: '$36,000/yr', action: 'Downgrade 60 idle seats', savings: '$36,000/yr', status: 'pending' },
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════
+// OPENAI API INTEGRATION
+// ═══════════════════════════════════════════════════════════
+let OPENAI_API_KEY = localStorage.getItem('nexus_openai_key') || '';
+
+const SYSTEM_PROMPT = `You are NEXUS, an elite enterprise cost intelligence AI. You have real-time access to the following enterprise data:
+
+FINANCIAL SUMMARY:
+- Total savings identified: $4.28M
+- Savings executed/realized: $1.847M  
+- Active anomalies detected: 12
+- SLA breach risk exposure: $340,000
+- Pending approval actions: 7
+
+ACTIVE ANOMALIES (top priority):
+1. Zoom+Webex duplicate licenses: $87,400/yr waste
+2. AWS On-Demand → Reserved opportunity: $342,000/yr savings
+3. Vendor XYZ contract breach: $23,800 overcharge
+4. 6 idle EC2 instances: $144,000/yr waste
+5. 340 unused Tableau licenses: $204,000/yr waste
+6. Marketing budget overrun: $180,000 over budget
+7. SLA breach risk (Acme Corp): $45,000 penalty exposure
+
+SLA STATUS:
+- Customer Support (Acme Corp): 93.2% vs 98% target → $45K penalty risk, 4h 12m window
+- Incident Response (GlobalBank): 98.1% vs 99.5% target → $120K penalty risk
+- Data Delivery (RetailCo): 94.1% vs 95% target → $22K penalty risk
+
+AGENTS RUNNING:
+- SpendIQ Agent: Monitoring 847 vendor invoices, 8 anomalies found
+- SLA Shield: Tracking 5 contracts, 3 at risk
+- ResourceX: Rightsizing 14 EC2 instances
+- FinOps: Q3 close reconciliation complete
+
+Your role is to:
+1. Give precise, data-driven answers with exact numbers
+2. Recommend specific actions with quantifiable ROI
+3. Identify root causes of cost issues
+4. Generate step-by-step playbooks when asked
+5. Always show the financial math behind recommendations
+
+Be concise, direct, and always lead with impact numbers. Format key numbers in a scannable way.`;
+
+async function callOpenAIAPI(userMessage, conversationHistory) {
+  if (!OPENAI_API_KEY) {
+    showApiKeyModal();
+    throw new Error('No API key set');
+  }
+
+  // Build messages array — system prompt + full history + new message
+  const messages = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    ...conversationHistory.map(m => ({ role: m.role, content: m.content })),
+    { role: 'user', content: userMessage }
+  ];
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages,
+      max_tokens: 1000,
+      temperature: 0.7
+    })
+  });
+
+  const data = await response.json();
+
+  if (data.error) {
+    const code = data.error.code || '';
+    const status = response.status;
+    if (status === 401 || code === 'invalid_api_key') throw new Error('INVALID_KEY');
+    if (status === 429 || code === 'insufficient_quota') throw new Error('QUOTA_EXCEEDED');
+    throw new Error(data.error.message || 'OpenAI API error');
+  }
+
+  const text = data?.choices?.[0]?.message?.content;
+  if (text) return text;
+  throw new Error('No response from OpenAI');
+}
+
+// ── API KEY MODAL ──────────────────────────────────────────
+function showApiKeyModal() {
+  document.getElementById('apiKeyModal').classList.add('open');
+  // Pre-fill if key already saved
+  if (OPENAI_API_KEY) document.getElementById('apiKeyInput').value = OPENAI_API_KEY;
+  setTimeout(() => document.getElementById('apiKeyInput').focus(), 100);
+}
+
+function closeApiKeyModal() {
+  document.getElementById('apiKeyModal').classList.remove('open');
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) {
+    document.getElementById('apiKeyError').textContent = 'Please enter your OpenAI API key.';
+    return;
+  }
+  if (!key.startsWith('sk-')) {
+    document.getElementById('apiKeyError').textContent = 'OpenAI keys start with "sk-" — please check and paste again.';
+    return;
+  }
+  OPENAI_API_KEY = key;
+  localStorage.setItem('nexus_openai_key', key);
+  document.getElementById('apiKeyError').textContent = '';
+  closeApiKeyModal();
+  showToast('success', 'OpenAI Connected ✓', 'GPT-4o-mini is live — ask NEXUS anything!');
+  document.getElementById('ai-provider-label').textContent = 'GPT-4o-mini · Connected ✓';
+}
+
+function clearApiKey() {
+  OPENAI_API_KEY = '';
+  localStorage.removeItem('nexus_openai_key');
+  document.getElementById('apiKeyInput').value = '';
+  document.getElementById('apiKeyError').textContent = '';
+  document.getElementById('ai-provider-label').textContent = 'GPT-4o-mini · Not connected';
+  showToast('info', 'API Key Cleared', 'Enter a new OpenAI key to reconnect');
+}
+
+function apiKeyEnter(e) {
+  if (e.key === 'Enter') saveApiKey();
+}
+
+// ═══════════════════════════════════════════════════════════
+// CHAT STATE
+// ═══════════════════════════════════════════════════════════
+let conversationHistory = [];
+let chatOpen = false;
+
+function openChat() {
+  document.getElementById('chatPanel').classList.add('open');
+  chatOpen = true;
+  if (!OPENAI_API_KEY) {
+    setTimeout(() => showApiKeyModal(), 300);
+  }
+}
+function closeChat() {
+  document.getElementById('chatPanel').classList.remove('open');
+  chatOpen = false;
+}
+
+function chatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  if (!OPENAI_API_KEY) {
+    showApiKeyModal();
+    return;
+  }
+
+  input.value = '';
+  appendChatMsg('user', msg);
+  conversationHistory.push({ role: 'user', content: msg });
+
+  const thinkId = appendThinking();
+
+  try {
+    const reply = await callOpenAIAPI(msg, conversationHistory.slice(0, -1));
+    removeThinking(thinkId);
+    appendChatMsg('ai', reply);
+    conversationHistory.push({ role: 'assistant', content: reply });
+  } catch (err) {
+    removeThinking(thinkId);
+    if (err.message === 'No API key set') {
+      // modal already shown
+    } else if (err.message === 'INVALID_KEY') {
+      appendChatMsg('ai', '⚠ Invalid OpenAI API key. Click "🔑 OpenAI Key" in the topbar and re-enter your key (starts with sk-).');
+      showToast('danger', 'Invalid API Key', 'Check your OpenAI key at platform.openai.com/api-keys');
+    } else if (err.message === 'QUOTA_EXCEEDED') {
+      appendChatMsg('ai', '⚠ OpenAI quota exceeded or billing not set up. Visit platform.openai.com/billing to add credits ($5 minimum).');
+      showToast('danger', 'Quota Exceeded', 'Add billing credits at platform.openai.com/billing');
+    } else {
+      appendChatMsg('ai', `⚠ Error: ${err.message}. Check your API key and internet connection.`);
+    }
+  }
+}
+
+function appendChatMsg(role, text) {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  if (role === 'ai') {
+    div.innerHTML = `<div class="msg-label">NEXUS AI</div>${formatChatText(text)}`;
+  } else {
+    div.textContent = text;
+  }
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function formatChatText(text) {
+  // Basic formatting for AI responses
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--accent)">$1</strong>')
+    .replace(/\$([\d,]+)/g, '<span style="color:var(--green);font-family:\'JetBrains Mono\',monospace;font-weight:700">$$$1</span>')
+    .replace(/\n/g, '<br>');
+}
+
+let thinkCounter = 0;
+function appendThinking() {
+  const id = 'think-' + (++thinkCounter);
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.id = id;
+  div.className = 'chat-thinking';
+  div.innerHTML = '<div class="think-dot"></div><div class="think-dot"></div><div class="think-dot"></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return id;
+}
+function removeThinking(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+// ═══════════════════════════════════════════════════════════
+// VIEWS
+// ═══════════════════════════════════════════════════════════
+const viewTitles = {
+  dashboard: ['Overview Dashboard', '— Live Enterprise Intelligence'],
+  agents: ['AI Agents', '— Autonomous Cost Intelligence'],
+  anomalies: ['Anomaly Detection', '— 12 Active Signals'],
+  sla: ['SLA Monitor', '— 3 Contracts at Risk'],
+  spend: ['Spend Intelligence', '— Procurement & Vendor Analysis'],
+  approvals: ['Approval Queue', '— 7 Pending Actions'],
+  playbooks: ['Playbooks', '— Automated Remediation Flows'],
+  variance: ['Financial Variance', '— Q3 Budget Analysis'],
+  resources: ['Resource Optimization', '— Utilization Analysis'],
+};
+
+function switchView(view) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event && event.currentTarget && event.currentTarget.classList.add('active');
+
+  const [title, sub] = viewTitles[view] || ['Dashboard', ''];
+  document.getElementById('topbar-title').textContent = title;
+  document.getElementById('topbar-subtitle').textContent = sub;
+
+  const content = document.getElementById('main-content');
+  content.style.opacity = 0;
+  setTimeout(() => {
+    renderView(view, content);
+    content.style.opacity = 1;
+  }, 150);
+}
+
+function renderView(view, container) {
+  const renders = {
+    dashboard: renderDashboard,
+    agents: renderAgents,
+    anomalies: renderAnomalies,
+    sla: renderSLA,
+    spend: renderSpend,
+    approvals: renderApprovals,
+    playbooks: renderPlaybooks,
+    variance: renderVariance,
+    resources: renderResources,
+  };
+  (renders[view] || renderDashboard)(container);
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────
+function renderDashboard(container) {
+  container.innerHTML = `
+    <div class="metrics-grid fade-in">
+      ${metricCard('SAVINGS IDENTIFIED', '$4.28M', 'green', 'blue', '▲ $890K this week', 'pos')}
+      ${metricCard('SAVINGS EXECUTED', '$1.85M', 'green', 'green', '▲ 43% realization rate', 'pos')}
+      ${metricCard('ACTIVE ANOMALIES', '12', 'red', 'red', '▼ 3 resolved today', 'pos')}
+      ${metricCard('SLA PENALTY RISK', '$340K', 'warn', 'orange', '⚠ 3 contracts at risk', '')}
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">AI Agent Status</div>
+      <button class="btn btn-outline" onclick="switchView('agents')">View All →</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;" class="fade-in">
+      ${DATA.agents.map(a => agentMiniCard(a)).join('')}
+    </div>
+
+    <div class="two-col fade-in">
+      <div>
+        <div class="section-header">
+          <div class="section-title">Top Anomalies</div>
+          <button class="btn btn-outline" onclick="switchView('anomalies')">View All →</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead><tr>
+              <th>Type</th><th>Impact</th><th>Severity</th><th>Action</th>
+            </tr></thead>
+            <tbody>
+              ${DATA.anomalies.slice(0,5).map(a => `
+                <tr>
+                  <td>
+                    <div style="font-size:12px;font-weight:600">${a.type}</div>
+                    <div style="font-size:10px;color:var(--text3)">${a.vendor}</div>
+                  </td>
+                  <td class="impact-val ${a.impact > 0 ? 'pos' : ''}">${formatImpact(a.impact)}</td>
+                  <td><span class="severity-badge sev-${a.severity}">${a.severity.toUpperCase()}</span></td>
+                  <td>
+                    <button class="action-badge ${a.status}" onclick="showImpact('${a.id}')">
+                      ${a.status === 'executed' ? '✓ Done' : a.status === 'approved' ? '⚡ Approved' : '▷ Review'}
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="section-header">
+          <div class="section-title">SLA Risk Monitor</div>
+          <button class="btn btn-outline" onclick="switchView('sla')">View All →</button>
+        </div>
+        ${DATA.slas.slice(0,3).map(s => slaCard(s)).join('')}
+      </div>
+    </div>
+
+    <div class="section-header fade-in">
+      <div class="section-title">Financial Variance — Q3</div>
+      <button class="btn btn-outline" onclick="switchView('variance')">Full Report →</button>
+    </div>
+    <div class="table-container fade-in">
+      <div class="variance-row header">
+        <div>Category</div><div>Budget vs Actual</div><div>Budget</div><div>Actual</div><div>Variance</div>
+      </div>
+      ${DATA.variance.map(v => varianceRow(v)).join('')}
+    </div>
+  `;
+}
+
+// ─── AGENTS VIEW ─────────────────────────────────────────
+function renderAgents(container) {
+  container.innerHTML = `
+    <div class="agents-grid fade-in">
+      ${DATA.agents.map(a => agentFullCard(a)).join('')}
+    </div>
+  `;
+}
+
+function agentFullCard(a) {
+  const statusCls = {active:'status-active',alert:'status-alert',processing:'status-processing',warn:'status-warn'};
+  return `
+    <div class="agent-card fade-in">
+      <div class="agent-header">
+        <div>
+          <div class="agent-name">${a.name}</div>
+          <div class="agent-type">${a.type}</div>
+        </div>
+        <div class="agent-status ${statusCls[a.status]}">
+          <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block"></span>
+          ${a.statusLabel}
+        </div>
+      </div>
+      <div class="agent-stats">
+        <div><div class="agent-stat-label">Signals/Hr</div><div class="agent-stat-value" style="color:var(--accent)">${a.signals}</div></div>
+        <div><div class="agent-stat-label">Anomalies</div><div class="agent-stat-value" style="color:var(--danger)">${a.anomalies}</div></div>
+        <div><div class="agent-stat-label">Impact</div><div class="agent-stat-value" style="color:var(--green)">${a.savings}</div></div>
+      </div>
+      <div class="agent-log">
+        ${a.log.map(l => `<div class="log-line"><span class="log-time">${l.t}</span><span class="log-msg ${l.cls}">${l.m}</span></div>`).join('')}
+      </div>
+      <div class="agent-actions">
+        <button class="btn btn-outline" style="font-size:11px" onclick="showAgentAnalysis('${a.id}')">📊 Analysis</button>
+        <button class="btn btn-outline" style="font-size:11px" onclick="openChatWithContext('${a.id}')">🤖 Ask AI</button>
+        <button class="btn btn-primary" style="font-size:11px;margin-left:auto" onclick="triggerAgent('${a.id}')">▷ Run Now</button>
+      </div>
+    </div>
+  `;
+}
+
+function agentMiniCard(a) {
+  const statusCls = {active:'status-active',alert:'status-alert',processing:'status-processing'};
+  const colors = {active:'var(--green)',alert:'var(--danger)',processing:'var(--accent)'};
+  return `
+    <div class="agent-card" style="cursor:pointer" onclick="switchView('agents')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700">${a.name}</div>
+        <div class="agent-status ${statusCls[a.status]}" style="font-size:9px;padding:2px 7px">${a.statusLabel}</div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--green);margin-bottom:4px">${a.savings}</div>
+      <div style="font-size:10px;color:var(--text3)">${a.signals} signals · ${a.anomalies} anomalies</div>
+    </div>
+  `;
+}
+
+// ─── ANOMALIES ────────────────────────────────────────────
+function renderAnomalies(container) {
+  container.innerHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:20px" class="fade-in">
+      <button class="btn btn-outline" onclick="filterAnomalies('all')">All (${DATA.anomalies.length})</button>
+      <button class="btn btn-outline" onclick="filterAnomalies('critical')">🔴 Critical</button>
+      <button class="btn btn-outline" onclick="filterAnomalies('high')">🟡 High</button>
+      <button class="btn btn-primary" onclick="showTotalImpact()">💰 Total Impact: $1.16M</button>
+    </div>
+    <div class="table-container fade-in" id="anomalyTable">
+      <table>
+        <thead><tr>
+          <th>ID</th><th>Type</th><th>Vendor / Resource</th><th>Category</th>
+          <th>Annual Impact</th><th>Severity</th><th>Age</th><th>Status</th><th>Action</th>
+        </tr></thead>
+        <tbody id="anomalyBody">
+          ${renderAnomalyRows(DATA.anomalies)}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderAnomalyRows(rows) {
+  return rows.map(a => `
+    <tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">${a.id}</td>
+      <td style="font-weight:600;font-size:12px">${a.type}</td>
+      <td style="font-size:12px;color:var(--text2)">${a.vendor}</td>
+      <td style="font-size:11px;color:var(--text3)">${a.category}</td>
+      <td class="impact-val ${a.impact > 0 ? 'pos' : ''}">${formatImpact(a.impact)}</td>
+      <td><span class="severity-badge sev-${a.severity}">${a.severity.toUpperCase()}</span></td>
+      <td style="font-size:11px;color:var(--text3)">${a.age}</td>
+      <td>
+        <span class="action-badge ${a.status === 'executed' ? 'executed' : a.status === 'approved' ? 'ok' : 'pending'}">
+          ${a.status === 'executed' ? '✓ Executed' : a.status === 'approved' ? '⚡ Approved' : '⏳ Pending'}
+        </span>
+      </td>
+      <td>
+        <button class="action-badge" onclick="showImpact('${a.id}')">📊 Math</button>
+        ${a.status === 'pending' ? `<button class="action-badge" onclick="approveAnomaly('${a.id}',this)" style="margin-left:4px">✓ Approve</button>` : ''}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterAnomalies(sev) {
+  const filtered = sev === 'all' ? DATA.anomalies : DATA.anomalies.filter(a => a.severity === sev);
+  document.getElementById('anomalyBody').innerHTML = renderAnomalyRows(filtered);
+}
+
+// ─── SLA ─────────────────────────────────────────────────
+function renderSLA(container) {
+  container.innerHTML = `
+    <div class="metrics-grid fade-in" style="grid-template-columns:repeat(3,1fr)">
+      ${metricCard('TOTAL PENALTY EXPOSURE', '$340K', 'warn', 'red', '3 contracts at risk', '')}
+      ${metricCard('BREACHES PREVENTED', '$245K', 'green', 'green', '▲ This month', 'pos')}
+      ${metricCard('CONTRACTS MONITORED', '5', 'blue', 'blue', '847 data signals/hr', '')}
+    </div>
+    <div class="two-col fade-in">
+      <div>
+        <div class="section-header"><div class="section-title">SLA Status Overview</div></div>
+        ${DATA.slas.map(s => slaCardFull(s)).join('')}
+      </div>
+      <div>
+        <div class="section-header"><div class="section-title">Active Remediation</div></div>
+        <div class="approval-card">
+          ${[
+            {icon:'🔀',icls:'icon-red',t:'Ticket Rerouting — Acme Corp',d:'Redirected 18 queued tickets to overflow team. ETA: SLA compliance restored in 2h.',imp:'+$45K protected',u:'Auto-executed · 14:32'},
+            {icon:'📞',icls:'icon-orange',t:'On-Call Escalation — GlobalBank',d:'Senior engineer alerted. P1 SLA clock paused per contract clause 4.2.1.',imp:'+$120K protected',u:'Auto-executed · 14:28'},
+            {icon:'⚙',icls:'icon-blue',t:'Pipeline Failover — RetailCo',d:'Data delivery rerouted to DR pipeline. Processing at 2.1x normal throughput.',imp:'+$22K protected',u:'Auto-executed · 14:25'},
+          ].map(i => `
+            <div class="approval-item">
+              <div class="approval-icon ${i.icls}">${i.icon}</div>
+              <div class="approval-body">
+                <div class="approval-title">${i.t}</div>
+                <div class="approval-desc">${i.d}</div>
+                <div class="approval-meta">
+                  <span class="approval-impact">${i.imp}</span>
+                  <span class="approval-urgency">${i.u}</span>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function slaCardFull(s) {
+  const pct = (s.current / s.target) * 100;
+  const fillColor = s.risk === 'critical' ? '#ff3b5c' : s.risk === 'high' ? '#ffb700' : '#00ff88';
+  const riskCls = { critical: 'risk-critical', high: 'risk-high', low: 'risk-low' };
+  return `
+    <div class="sla-card">
+      <div class="sla-header">
+        <div>
+          <div class="sla-name">${s.name}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${s.client} · ${s.timeLeft} remaining</div>
+        </div>
+        <span class="sla-risk ${riskCls[s.risk]}">${s.risk.toUpperCase()}</span>
+      </div>
+      <div class="sla-progress-track">
+        <div class="sla-progress-fill" style="width:${pct}%;background:${fillColor}"></div>
+      </div>
+      <div class="sla-meta">
+        <span>${s.current}% achieved <span style="color:var(--text3)">/ ${s.target}% target</span></span>
+        <span class="sla-penalty">$${s.penalty.toLocaleString()} at risk</span>
+      </div>
+      ${s.actions.length ? `<div style="margin-top:8px;font-size:10px;color:var(--green)">✓ Auto-actions: ${s.actions.join(' · ')}</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── SPEND INTELLIGENCE ───────────────────────────────────
+function renderSpend(container) {
+  container.innerHTML = `
+    <div class="metrics-grid fade-in">
+      ${metricCard('INVOICES SCANNED', '847', 'blue', 'blue', 'Live · Updated 2m ago', '')}
+      ${metricCard('OVERCHARGES FOUND', '$127K', 'red', 'red', '4 disputes pending', '')}
+      ${metricCard('DUPLICATE COSTS', '$87.4K', 'warn', 'orange', '2 platforms overlapping', '')}
+      ${metricCard('RATE SAVINGS OPP.', '$342K', 'green', 'green', 'AWS Reserved switch', 'pos')}
+    </div>
+    <div class="two-col fade-in">
+      <div>
+        <div class="section-header"><div class="section-title">Vendor Cost Breakdown</div></div>
+        <div class="table-container">
+          <table>
+            <thead><tr><th>Vendor</th><th>Monthly Spend</th><th>vs Contract</th><th>Risk</th></tr></thead>
+            <tbody>
+              ${[
+                ['AWS',        '$284,000', '+0%',   'low'],
+                ['Salesforce', '$72,400',  '+0%',   'low'],
+                ['Zoom',       '$18,200',  '+0%',   'medium'],
+                ['Webex',      '$15,800',  '+0%',   'medium'],
+                ['Vendor XYZ', '$23,800',  '+23%',  'critical'],
+                ['Tableau',    '$51,000',  '+0%',   'high'],
+                ['Azure',      '$94,000',  '+0%',   'low'],
+              ].map(([v,s,c,r]) => `
+                <tr>
+                  <td style="font-weight:600;font-size:12px">${v}</td>
+                  <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${s}</td>
+                  <td style="color:${c.startsWith('+') && c !== '+0%' ? 'var(--danger)' : 'var(--text3)'};font-family:'JetBrains Mono',monospace;font-size:12px">${c}</td>
+                  <td><span class="severity-badge sev-${r}">${r.toUpperCase()}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="section-header"><div class="section-title">Rate Optimization Opportunities</div></div>
+        <div class="approval-card">
+          ${[
+            {t:'AWS On-Demand → 1yr Reserved',d:'34 workloads on on-demand pricing. Switch to Reserved saves 42%. Commitment: $485K/yr.', imp:'+$342,000/yr',u:'48h rate lock'},
+            {t:'Azure Blob Hot → Coldline',d:'2.3TB of data untouched for 90+ days sitting in Hot tier at $0.023/GB vs $0.004/GB.', imp:'+$58,000/yr',u:'No commitment'},
+            {t:'Consolidate Zoom + Webex',d:'70% feature overlap. Standardize on Zoom. Terminate Webex contract at renewal.', imp:'+$87,400/yr',u:'12d to renewal'},
+          ].map(i => `
+            <div class="approval-item">
+              <div class="approval-body">
+                <div class="approval-title">${i.t}</div>
+                <div class="approval-desc">${i.d}</div>
+                <div class="approval-meta" style="margin-top:6px">
+                  <span class="approval-impact">${i.imp}</span>
+                  <span class="approval-urgency">${i.u}</span>
+                  <button class="btn-sm btn-sm-approve" style="margin-left:auto" onclick="showToast('success','Action Queued','Added to approval workflow')">Approve</button>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ─── APPROVALS ────────────────────────────────────────────
+function renderApprovals(container) {
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px" class="fade-in">
+      <div style="font-size:12px;color:var(--text3)">7 actions pending · Potential impact: <span style="color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:700">+$858,400/yr</span></div>
+      <button class="btn btn-success" style="margin-left:auto" onclick="approveAll()">✓ Approve All Low-Risk</button>
+    </div>
+    <div class="approval-card fade-in" id="approvalsList">
+      ${DATA.approvals.map((a, i) => approvalItem(a, i)).join('')}
+    </div>
+  `;
+}
+
+function approvalItem(a, i) {
+  return `
+    <div class="approval-item" id="approval-${i}">
+      <div class="approval-icon ${a.iconCls}">${a.icon}</div>
+      <div class="approval-body">
+        <div class="approval-title">${a.title}</div>
+        <div class="approval-desc">${a.desc}</div>
+        <div class="approval-meta">
+          <span class="approval-impact">${a.impact}</span>
+          <span class="approval-urgency">${a.urgency}</span>
+        </div>
+        <div class="approval-btns">
+          <button class="btn-sm btn-sm-approve" onclick="approveItem(${i})">✓ Approve & Execute</button>
+          <button class="btn-sm btn-sm-review" onclick="showApprovalModal(${i})">📊 View Analysis</button>
+          <button class="btn-sm btn-sm-decline" onclick="declineItem(${i})">✗ Decline</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ─── PLAYBOOKS ────────────────────────────────────────────
+function renderPlaybooks(container) {
+  const pb = DATA.playbooks.saasConsolidation;
+  container.innerHTML = `
+    <div class="two-col fade-in">
+      <div>
+        <div class="section-header">
+          <div class="section-title">Active Playbook</div>
+          <span style="font-size:11px;color:var(--accent);font-family:'JetBrains Mono',monospace">Step 4/7</span>
+        </div>
+        <div class="approval-card" style="margin-bottom:14px">
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border)">
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px">${pb.title}</div>
+            <div style="font-size:11px;color:var(--text3)">Trigger: ${pb.trigger}</div>
+            <div style="display:flex;gap:16px;margin-top:10px">
+              <div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Annual Savings</div><div style="font-family:'JetBrains Mono',monospace;color:var(--green);font-size:15px;font-weight:700">$87,400</div></div>
+              <div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Timeline</div><div style="font-family:'JetBrains Mono',monospace;font-size:15px">12 days</div></div>
+              <div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Status</div><div style="color:var(--warn);font-size:12px;font-weight:600">Awaiting Approval</div></div>
+            </div>
+          </div>
+          ${pb.steps.map(s => `
+            <div class="playbook-step">
+              <div class="step-num ${s.done ? 'done' : s.active ? 'active' : ''}">${s.done ? '✓' : s.num}</div>
+              <div class="step-content">
+                <div class="step-title">${s.title}</div>
+                <div class="step-desc">${s.desc}</div>
+              </div>
+              <div class="step-tag ${s.done ? 'tag-done' : s.tag === 'auto' ? 'tag-auto' : 'tag-human'}">
+                ${s.done ? 'DONE' : s.tag === 'auto' ? 'AUTO' : 'HUMAN'}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="section-header"><div class="section-title">Available Playbooks</div></div>
+        ${[
+          {t:'SLA Breach Prevention',desc:'Auto-reroute, escalate, and protect penalty exposure',trigger:'SLA < 95%',savings:'$340K protection',status:'active'},
+          {t:'EC2 Rightsizing',desc:'Analyze utilization → recommend → execute with approval',trigger:'CPU < 10% for 14d',savings:'$31,400/mo',status:'ready'},
+          {t:'License Reclamation',desc:'Identify dormant licenses and downgrade automatically',trigger:'0 logins for 90d',savings:'$204,000/yr',status:'ready'},
+          {t:'Invoice Dispute Flow',desc:'Detect overbilling → generate dispute → track to resolution',trigger:'Vendor rate deviation',savings:'$23,800 recovery',status:'active'},
+          {t:'Budget Overrun Response',desc:'Identify root cause → alert stakeholders → suggest reallocation',trigger:'Budget > 110%',savings:'Cost containment',status:'ready'},
+        ].map(p => `
+          <div class="sla-card" style="cursor:pointer">
+            <div class="sla-header">
+              <div>
+                <div class="sla-name">${p.t}</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px">${p.desc}</div>
+              </div>
+              <span class="sla-risk ${p.status === 'active' ? 'risk-critical' : 'risk-low'}">${p.status.toUpperCase()}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:8px">
+              <span>Trigger: ${p.trigger}</span>
+              <span style="color:var(--green);font-family:'JetBrains Mono',monospace">${p.savings}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ─── VARIANCE ─────────────────────────────────────────────
+function renderVariance(container) {
+  const totalOver = DATA.variance.filter(v => v.variance > 0).reduce((s,v) => s+v.variance, 0);
+  const totalUnder = DATA.variance.filter(v => v.variance < 0).reduce((s,v) => s+Math.abs(v.variance), 0);
+  container.innerHTML = `
+    <div class="metrics-grid fade-in" style="grid-template-columns:repeat(3,1fr)">
+      ${metricCard('TOTAL OVERSPEND', '$'+totalOver.toLocaleString(), 'red', 'red', 'Q3 vs Budget', '')}
+      ${metricCard('TOTAL UNDERSPEND', '$'+totalUnder.toLocaleString(), 'green', 'green', 'Favorable variance', 'pos')}
+      ${metricCard('NET VARIANCE', '$'+(totalOver-totalUnder).toLocaleString(), 'warn', 'orange', 'Action required', '')}
+    </div>
+    <div class="section-header fade-in"><div class="section-title">Budget vs Actuals — Q3</div></div>
+    <div class="table-container fade-in">
+      <div class="variance-row header">
+        <div>Category</div><div>Budget vs Actual</div><div>Budget</div><div>Actual</div><div>Variance</div>
+      </div>
+      ${DATA.variance.map(v => varianceRow(v)).join('')}
+    </div>
+    <div style="margin-top:20px" class="fade-in">
+      <div class="section-header"><div class="section-title">Root Cause Attribution</div></div>
+      <div class="approval-card">
+        ${[
+          {icon:'☁',icls:'icon-blue',t:'Cloud Infrastructure +$232K',d:'Root cause: 3 unplanned data migrations + 14 oversized EC2 instances. ResourceX agent has identified $31K/mo in immediate rightsizing.'},
+          {icon:'📱',icls:'icon-purple',t:'SaaS Licenses +$87K',d:'Root cause: 340 Tableau seats purchased in Q2 for project that ended. Zero utilization for 90 days. Reclamation playbook initiated.'},
+          {icon:'📣',icls:'icon-orange',t:'Marketing Spend +$180K',d:'Root cause: Campaign scaling without budget amendment. Attribution: 3 campaigns exceeded CPA targets by 2.1x. Review with VP Marketing required.'},
+        ].map(i => `
+          <div class="approval-item">
+            <div class="approval-icon ${i.icls}">${i.icon}</div>
+            <div class="approval-body">
+              <div class="approval-title">${i.t}</div>
+              <div class="approval-desc">${i.d}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ─── RESOURCES ────────────────────────────────────────────
+function renderResources(container) {
+  container.innerHTML = `
+    <div class="metrics-grid fade-in" style="grid-template-columns:repeat(4,1fr)">
+      ${metricCard('WASTE IDENTIFIED', '$310K/yr', 'red', 'red', 'Across all resources', '')}
+      ${metricCard('SAVINGS EXECUTABLE', '$278K/yr', 'green', 'green', '4 actions ready', 'pos')}
+      ${metricCard('AVG UTILIZATION', '39%', 'warn', 'orange', 'Industry avg: 65%', '')}
+      ${metricCard('ZOMBIE RESOURCES', '6', 'red', 'red', 'Already terminated', '')}
+    </div>
+    <div class="section-header fade-in"><div class="section-title">Resource Utilization Analysis</div></div>
+    <div class="table-container fade-in">
+      <table>
+        <thead><tr>
+          <th>Resource</th><th>Utilization</th><th>Waste</th><th>Recommended Action</th><th>Annual Savings</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+          ${DATA.resources.map(r => `
+            <tr>
+              <td style="font-weight:600;font-size:12px">${r.name}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="progress-bar" style="width:80px">
+                    <div class="progress-fill ${r.utilization < 30 ? 'fill-over' : r.utilization < 60 ? 'fill-warn' : 'fill-ok'}" style="width:${r.utilization}%"></div>
+                  </div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${r.utilization < 30 ? 'var(--danger)' : 'var(--text2)'}">${r.utilization}%</span>
+                </div>
+              </td>
+              <td style="color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:12px">${r.waste}</td>
+              <td style="font-size:12px;color:var(--text2)">${r.action}</td>
+              <td style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700">${r.savings}</td>
+              <td>
+                <span class="action-badge ${r.status === 'done' ? 'executed' : r.status === 'executing' ? 'pending' : ''}">
+                  ${r.status === 'done' ? '✓ Done' : r.status === 'executing' ? '⚡ Executing' : '▷ Approve'}
+                </span>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════
+// COMPONENT HELPERS
+// ═══════════════════════════════════════════════════════════
+function metricCard(label, value, valueClass, topColor, delta, deltaClass) {
+  return `
+    <div class="metric-card ${topColor}">
+      <div class="metric-label">${label}</div>
+      <div class="metric-value ${valueClass}">${value}</div>
+      <div class="metric-delta"><span class="${deltaClass ? 'delta-' + deltaClass : ''}">${delta}</span></div>
+    </div>
+  `;
+}
+
+function slaCard(s) {
+  const pct = (s.current / s.target) * 100;
+  const fillColor = s.risk === 'critical' ? '#ff3b5c' : s.risk === 'high' ? '#ffb700' : '#00ff88';
+  const riskCls = { critical: 'risk-critical', high: 'risk-high', low: 'risk-low' };
+  return `
+    <div class="sla-card">
+      <div class="sla-header">
+        <div class="sla-name">${s.name} <span style="font-weight:400;color:var(--text3);font-size:10px">· ${s.client}</span></div>
+        <span class="sla-risk ${riskCls[s.risk]}">${s.risk.toUpperCase()}</span>
+      </div>
+      <div class="sla-progress-track">
+        <div class="sla-progress-fill" style="width:${pct}%;background:${fillColor}"></div>
+      </div>
+      <div class="sla-meta">
+        <span>${s.current}% / ${s.target}% target</span>
+        <span class="sla-penalty">$${s.penalty.toLocaleString()}</span>
+      </div>
+    </div>
+  `;
+}
+
+function varianceRow(v) {
+  const isOver = v.variance > 0;
+  const pct = Math.min(Math.abs(v.variance) / v.budget * 100, 100);
+  return `
+    <div class="variance-row">
+      <div style="font-size:12px;font-weight:600">${v.category}</div>
+      <div>
+        <div class="progress-bar">
+          <div class="progress-fill ${isOver ? 'fill-over' : 'fill-ok'}" style="width:${pct * 3}%;max-width:100%"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">${isOver ? '+' : ''}${v.pct.toFixed(1)}% vs budget</div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px">$${(v.budget/1000).toFixed(0)}K</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px">$${(v.actual/1000).toFixed(0)}K</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${isOver ? 'var(--danger)' : 'var(--green)'}">
+        ${isOver ? '+' : '-'}$${Math.abs(v.variance/1000).toFixed(0)}K
+      </div>
+    </div>
+  `;
+}
+
+function formatImpact(val) {
+  const abs = Math.abs(val);
+  const prefix = val > 0 ? '+' : '-';
+  if (abs >= 1000000) return prefix + '$' + (abs/1000000).toFixed(1) + 'M';
+  if (abs >= 1000) return prefix + '$' + (abs/1000).toFixed(0) + 'K';
+  return prefix + '$' + abs.toLocaleString();
+}
+
+// ═══════════════════════════════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════════════════════════════
+function showImpact(id) {
+  const a = DATA.anomalies.find(x => x.id === id);
+  if (!a) return;
+  const modals = {
+    'A-001': {
+      title: 'Cost Impact: Duplicate SaaS (Zoom + Webex)',
+      body: `
+        <div class="math-label">COST ANALYSIS</div>
+        <div class="math-block">
+Zoom Enterprise         = <span class="highlight-num">$18,200/mo × 12</span> = $218,400/yr
+Webex Enterprise        = <span class="highlight-num">$15,800/mo × 12</span> = $189,600/yr
+─────────────────────────────────────────────────────
+Total Spend             = $408,000/yr
+Feature Overlap         = 70% (validated by usage data)
+Effective Redundancy    = <span class="highlight-neg">$189,600 × 0.46</span> = <span class="highlight-neg">$87,400/yr waste</span>
+        <div class="math-result">💡 Net Annual Savings: +$87,400/yr</div></div>
+        <div class="math-label">TRANSITION COST MODEL</div>
+        <div class="math-block">
+Migration Cost          = $4,200 (one-time IT effort)
+Training               = $1,800 (2hr sessions × 120 users)
+Break-even             = <span class="highlight-num">39 days</span>
+5-Year NPV             = <span class="highlight-num">$428,000</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn btn-primary" onclick="approveAnomaly('A-001',this);closeModal()">✓ Approve Action</button>
+          <button class="btn btn-outline" onclick="closeModal()">Close</button>
+        </div>
+      `
+    },
+    'A-002': {
+      title: 'Cost Impact: AWS On-Demand → Reserved Instances',
+      body: `
+        <div class="math-label">SAVINGS CALCULATION</div>
+        <div class="math-block">
+On-Demand Rate (34 instances) = <span class="highlight-neg">$68,500/mo</span>
+Reserved Rate (1yr, upfront)  = <span class="highlight-num">$39,700/mo</span>
+─────────────────────────────────────────────────────
+Monthly Savings               = $28,500/mo
+Annual Savings                = <span class="highlight-num">$342,000/yr</span>
+Upfront Commitment            = $476,400
+Break-even                    = <span class="highlight-num">16.7 months</span>
+        <div class="math-result">💡 3-Year NPV: +$549,600</div></div>
+      `
+    },
+    'A-005': {
+      title: 'Cost Impact: Unused Tableau Licenses',
+      body: `
+        <div class="math-label">LICENSE WASTE ANALYSIS</div>
+        <div class="math-block">
+Total Tableau Seats           = 500
+Active Users (90d)            = <span class="highlight-num">160</span>
+Dormant Seats                 = <span class="highlight-neg">340</span>
+─────────────────────────────────────────────────────
+Creator License Cost          = $600/seat/yr
+340 × $600                   = <span class="highlight-neg">$204,000/yr waste</span>
+Downgrade to Viewer ($12/mo)  = $48,960/yr
+─────────────────────────────────────────────────────
+Net Savings                   = <span class="highlight-num">$155,040/yr</span>
+        <div class="math-result">💡 Annual Savings: +$204,000/yr</div></div>
+      `
+    }
+  };
+  const m = modals[id] || {
+    title: `Cost Impact: ${a.type}`,
+    body: `
+      <div class="math-block">
+Impact: <span class="${a.impact > 0 ? 'highlight-num' : 'highlight-neg'}">${formatImpact(a.impact)}/yr</span>
+Severity: ${a.severity.toUpperCase()}
+Category: ${a.category}
+Detected: ${a.age} ago
+      <div class="math-result">${a.impact > 0 ? '💡' : '⚠'} ${a.impact > 0 ? 'Savings' : 'Cost'}: ${formatImpact(a.impact)}</div></div>
+    `
+  };
+  document.getElementById('modalTitle').textContent = m.title;
+  document.getElementById('modalBody').innerHTML = m.body;
+  document.getElementById('impactModal').classList.add('open');
+}
+
+function showTotalImpact() {
+  document.getElementById('modalTitle').textContent = 'Total Anomaly Impact Summary';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="math-label">AGGREGATE COST IMPACT</div>
+    <div class="math-block">
+Savings Opportunities:
+  AWS Reserved Migration      = <span class="highlight-num">+$342,000/yr</span>
+  Zombie EC2 Termination      = <span class="highlight-num">+$144,000/yr</span>
+  Tableau License Reclaim     = <span class="highlight-num">+$204,000/yr</span>
+  SaaS Consolidation (Zoom)   = <span class="highlight-num">+$87,400/yr</span>
+  Azure Storage Optimization  = <span class="highlight-num">+$58,000/yr</span>
+───────────────────────────────────────────────
+Subtotal Savings              = <span class="highlight-num">+$835,400/yr</span>
+
+Cost Leakages to Recover:
+  Vendor XYZ Overcharge       = <span class="highlight-neg">-$23,800</span>
+  SLA Penalty Exposure        = <span class="highlight-neg">-$340,000</span> (at risk)
+  Marketing Overrun           = <span class="highlight-neg">-$180,000</span>
+───────────────────────────────────────────────
+Total Actionable Value        = <span class="highlight-num" style="font-size:18px">$1,379,200/yr</span>
+    <div class="math-result">💡 Execute all approved actions → $1.38M annual impact</div></div>
+  `;
+  document.getElementById('impactModal').classList.add('open');
+}
+
+function showApprovalModal(i) {
+  const a = DATA.approvals[i];
+  document.getElementById('modalTitle').textContent = `Analysis: ${a.title}`;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="math-block">
+Action: ${a.title}
+Impact: <span class="highlight-num">${a.impact}</span>
+Urgency: ${a.urgency}
+Risk Level: Low · Reversible
+    <div class="math-result">Recommended: Approve</div></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" onclick="approveItem(${i});closeModal()">✓ Approve & Execute</button>
+      <button class="btn btn-outline" onclick="closeModal()">Close</button>
+    </div>
+  `;
+  document.getElementById('impactModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('impactModal').classList.remove('open');
+}
+
+function approveAnomaly(id, btn) {
+  const a = DATA.anomalies.find(x => x.id === id);
+  if (a) a.status = 'approved';
+  if (btn && btn.classList) {
+    btn.classList.add('executed');
+    btn.textContent = '✓ Approved';
+  }
+  showToast('success', 'Action Approved', `${id} routed to execution queue`);
+}
+
+function approveItem(i) {
+  const el = document.getElementById('approval-' + i);
+  if (el) {
+    el.style.opacity = '0.5';
+    el.style.pointerEvents = 'none';
+    const btns = el.querySelectorAll('.btn-sm');
+    btns.forEach(b => b.disabled = true);
+    el.querySelector('.approval-title').innerHTML += ' <span style="color:var(--green);font-size:11px">✓ Executing...</span>';
+  }
+  const a = DATA.approvals[i];
+  showToast('success', 'Executing Action', `${a ? a.title : 'Action'} queued for execution`);
+}
+
+function declineItem(i) {
+  const el = document.getElementById('approval-' + i);
+  if (el) {
+    el.style.opacity = '0.3';
+    el.style.pointerEvents = 'none';
+  }
+  showToast('info', 'Action Declined', 'Item removed from queue');
+}
+
+function approveAll() {
+  const items = document.querySelectorAll('#approvalsList .approval-item');
+  items.forEach((el, i) => {
+    if (el.style.opacity !== '0.3') {
+      setTimeout(() => { el.style.opacity='0.5'; el.style.pointerEvents='none'; }, i * 200);
+    }
+  });
+  showToast('success', 'Bulk Approval', '5 low-risk actions approved and queued');
+}
+
+function triggerAgent(id) {
+  const a = DATA.agents.find(x => x.id === id);
+  showToast('info', `${a ? a.name : 'Agent'} Triggered`, 'Full scan initiated — results in ~30s');
+  setTimeout(() => showToast('success', 'Scan Complete', `${Math.floor(Math.random()*5)+1} new signals detected`), 3000);
+}
+
+function showAgentAnalysis(id) {
+  const a = DATA.agents.find(x => x.id === id);
+  document.getElementById('modalTitle').textContent = `${a.name} — Performance Analysis`;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="math-block">
+Agent: ${a.name}
+Type: ${a.type}
+Status: ${a.statusLabel}
+───────────────────────────
+Signals Processed: <span class="highlight-num">${a.signals}/hr</span>
+Anomalies Active: <span class="highlight-neg">${a.anomalies}</span>
+Financial Impact: <span class="highlight-num">${a.savings}</span>
+───────────────────────────
+Uptime: 99.97%
+Avg Response: 1.2s
+    <div class="math-result">Agent Operating Optimally</div></div>
+  `;
+  document.getElementById('impactModal').classList.add('open');
+}
+
+function openChatWithContext(agentId) {
+  openChat();
+  const a = DATA.agents.find(x => x.id === agentId);
+  if (a) {
+    document.getElementById('chatInput').value = `Tell me more about what ${a.name} has found`;
+    document.getElementById('chatInput').focus();
+  }
+}
+
+function runAllAgents() {
+  showToast('info', 'All Agents Triggered', 'Running full enterprise scan...');
+  setTimeout(() => showToast('success', 'Scan Complete', '3 new anomalies detected · $42K additional savings found'), 4000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+function showToast(type, title, msg) {
+  const icons = { success: '✓', danger: '⚠', info: 'ℹ', warn: '⚡' };
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `
+    <div class="toast-icon">${icons[type] || 'ℹ'}</div>
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-msg">${msg}</div>
+    </div>
+  `;
+  container.appendChild(el);
+  setTimeout(() => { el.style.transition = 'opacity 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 4000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// LIVE CLOCK
+// ═══════════════════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  document.getElementById('live-time').textContent =
+    now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══════════════════════════════════════════════════════════
+// SIMULATED LIVE ALERTS
+// ═══════════════════════════════════════════════════════════
+const liveAlerts = [
+  { delay: 8000, type: 'warn', title: 'SLA Shield Alert', msg: 'Acme Corp ticket queue growing — auto-reroute initiated' },
+  { delay: 18000, type: 'danger', title: 'New Anomaly Detected', msg: 'Duplicate charge found: $3,200 on Invoice INV-9910' },
+  { delay: 30000, type: 'success', title: 'ResourceX Executed', msg: 'Azure VMs scheduled off-hours → $18,700/mo saved' },
+  { delay: 45000, type: 'info', title: 'FinOps Agent', msg: 'Q3 close reconciliation variance: $4,200 accrual adj. needed' },
+];
+liveAlerts.forEach(a => setTimeout(() => showToast(a.type, a.title, a.msg), a.delay));
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+document.getElementById('main-content').style.transition = 'opacity 0.15s';
+renderView('dashboard', document.getElementById('main-content'));
+
+// Initial welcome toast
+setTimeout(() => showToast('info', 'NEXUS Initialized', '4 agents active · Monitoring 847 signals'), 1000);
+setTimeout(() => showToast('danger', 'SLA Alert', 'Acme Corp support SLA at 93.2% — breach risk detected'), 3000);
+
+// Auto-show API key modal if no key saved yet
+if (!OPENAI_API_KEY) {
+  setTimeout(() => {
+    showToast('warn', 'OpenAI Key Required', 'Click "🔑 OpenAI Key" in topbar to enable AI chat');
+  }, 2500);
+} else {
+  document.getElementById('ai-provider-label').textContent = 'GPT-4o-mini · Connected ✓';
+  setTimeout(() => showToast('success', 'OpenAI Connected ✓', 'GPT-4o-mini ready — ask NEXUS anything!'), 2000);
+}
+</script>
+</body>
+</html>
