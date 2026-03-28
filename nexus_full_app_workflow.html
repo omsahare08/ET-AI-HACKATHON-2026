@@ -1,0 +1,525 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wf{font-family:var(--font-sans);padding:1rem 0}
+.nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.nav-pill{padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-secondary);transition:all .15s;white-space:nowrap}
+.nav-pill.active{border-color:var(--color-border-info);background:var(--color-background-info);color:var(--color-text-info)}
+.phase{display:none}
+.phase.active{display:block}
+.phase-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;padding-bottom:16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.phase-num{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex-shrink:0}
+.phase-meta{flex:1}
+.phase-title{font-size:18px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.phase-sub{font-size:13px;color:var(--color-text-secondary)}
+.phase-badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:12px;margin-top:6px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.col1{display:grid;grid-template-columns:1fr;gap:12px}
+.card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px}
+.card-title{font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.step-list{display:flex;flex-direction:column;gap:8px}
+.step-item{display:flex;gap:10px;align-items:flex-start}
+.step-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0;margin-top:1px}
+.step-text{font-size:13px;color:var(--color-text-primary);line-height:1.5}
+.step-note{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;padding:3px 9px;border-radius:10px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary)}
+.metric-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.metric{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px}
+.metric-val{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.metric-lbl{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.flow-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.flow-box{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;white-space:nowrap}
+.flow-arr{color:var(--color-text-tertiary);font-size:14px}
+.progress-track{height:4px;background:var(--color-border-tertiary);border-radius:2px;margin-bottom:20px;position:relative}
+.progress-fill{height:100%;border-radius:2px;background:var(--color-background-info);transition:width .3s}
+.prog-label{position:absolute;right:0;top:-18px;font-size:11px;color:var(--color-text-tertiary)}
+.nav-btns{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--color-border-tertiary)}
+.btn-nav{padding:8px 18px;border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);transition:all .15s}
+.btn-nav:hover{background:var(--color-background-tertiary)}
+.btn-nav.primary{background:var(--color-background-info);border-color:var(--color-border-info);color:var(--color-text-info)}
+.btn-nav:disabled{opacity:.35;cursor:default}
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:14px 0}
+.info-box{border-left:3px solid var(--color-border-info);background:var(--color-background-info);padding:10px 14px;border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;margin-top:10px}
+.info-box p{font-size:13px;color:var(--color-text-info);line-height:1.5}
+.warn-box{border-left:3px solid var(--color-border-warning);background:var(--color-background-warning);padding:10px 14px;border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;margin-top:10px}
+.warn-box p{font-size:13px;color:var(--color-text-warning);line-height:1.5}
+.suc-box{border-left:3px solid var(--color-border-success);background:var(--color-background-success);padding:10px 14px;border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;margin-top:10px}
+.suc-box p{font-size:13px;color:var(--color-text-success);line-height:1.5}
+.full-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;margin-bottom:12px}
+</style>
+
+<div class="wf">
+  <div class="nav" id="navBar"></div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill" style="width:12.5%"></div>
+    <span class="prog-label" id="progLabel">Phase 1 of 8</span>
+  </div>
+  <div id="phaseContainer"></div>
+  <div class="nav-btns">
+    <button class="btn-nav" id="btnPrev" onclick="goPhase(cur-1)" disabled>← Prev</button>
+    <button class="btn-nav primary" id="btnNext" onclick="goPhase(cur+1)">Next →</button>
+  </div>
+</div>
+
+<script>
+const phases = [
+  {
+    num:'1', title:'Setup & API key', sub:'One-time configuration before first use',
+    badge:'One-time setup', badgeBg:'var(--color-background-info)', badgeCol:'var(--color-text-info)',
+    numBg:'var(--color-background-info)', numCol:'var(--color-text-info)',
+    content:`
+    <div class="cols">
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">What you do</div>
+          <div class="step-list">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">1</div><div><div class="step-text">Download index.html — single file, zero dependencies</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">2</div><div><div class="step-text">Open in Chrome or Edge (any modern browser)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">3</div><div><div class="step-text">Click "OpenAI Key" in topbar → paste your sk-... key</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">4</div><div><div class="step-text">Key saved to localStorage — auto-connects next time</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">What the app does</div>
+          <div class="step-list">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-tertiary);color:var(--color-text-secondary)">→</div><div><div class="step-text">Validates key format (must start with sk-)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-tertiary);color:var(--color-text-secondary)">→</div><div><div class="step-text">Stores securely in browser localStorage only</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-tertiary);color:var(--color-text-secondary)">→</div><div><div class="step-text">Shows "GPT-4o-mini · Connected" in chat panel</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-tertiary);color:var(--color-text-secondary)">→</div><div><div class="step-text">Fires "NEXUS Initialized" toast + SLA alert at t=3s</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">Technical flow</div>
+          <div class="flow-row">
+            <div class="flow-box" style="background:var(--color-background-info);color:var(--color-text-info)">User opens file</div>
+            <span class="flow-arr">→</span>
+            <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">localStorage check</div>
+            <span class="flow-arr">→</span>
+            <div class="flow-box" style="background:var(--color-background-warning);color:var(--color-text-warning)">No key?</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-box" style="background:var(--color-background-warning);color:var(--color-text-warning)">Toast warning</div>
+            <span class="flow-arr">→</span>
+            <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">Key modal</div>
+            <span class="flow-arr">→</span>
+            <div class="flow-box" style="background:var(--color-background-success);color:var(--color-text-success)">Connected</div>
+          </div>
+          <div class="divider"></div>
+          <div class="metric-row">
+            <div class="metric"><div class="metric-val">0</div><div class="metric-lbl">npm installs needed</div></div>
+            <div class="metric"><div class="metric-val">1</div><div class="metric-lbl">HTML file total</div></div>
+            <div class="metric"><div class="metric-val">sk-</div><div class="metric-lbl">Key prefix required</div></div>
+            <div class="metric"><div class="metric-val">Local</div><div class="metric-lbl">Key storage location</div></div>
+          </div>
+        </div>
+        <div class="info-box"><p>Key is never sent to any server except api.openai.com. If you clear browser data, you'll need to re-enter it.</p></div>
+      </div>
+    </div>`
+  },
+  {
+    num:'2', title:'Dashboard loads & agents initialise', sub:'Real-time data renders, 4 agents start monitoring',
+    badge:'Automatic on load', badgeBg:'var(--color-background-success)', badgeCol:'var(--color-text-success)',
+    numBg:'var(--color-background-success)', numCol:'var(--color-text-success)',
+    content:`
+    <div class="cols">
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">What renders on the dashboard</div>
+          <div class="step-list">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">1</div><div><div class="step-text">4 KPI cards — savings identified, executed, anomalies, SLA risk</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">2</div><div><div class="step-text">4 agent mini-cards with live status badges</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">3</div><div><div class="step-text">Top 5 anomalies table with severity + impact</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">4</div><div><div class="step-text">SLA risk monitor (3 cards at risk)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">5</div><div><div class="step-text">Q3 financial variance breakdown table</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Simulated live alerts (auto-fire)</div>
+          <div class="step-list">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">1s</div><div><div class="step-text">NEXUS Initialized — 4 agents active</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">3s</div><div><div class="step-text">SLA Alert — Acme Corp at 93.2% breach risk</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">8s</div><div><div class="step-text">SLA Shield — ticket queue growing, rerouting</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">18s</div><div><div class="step-text">New anomaly — duplicate charge INV-9910</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">30s</div><div><div class="step-text">ResourceX executed — Azure VMs $18.7K/mo saved</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">4 AI agents running</div>
+          <div class="step-list" style="gap:12px">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">SQ</div><div><div class="step-text">SpendIQ — 312 signals/hr, 8 anomalies</div><div class="step-note">Status: ACTIVE</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">SS</div><div><div class="step-text">SLA Shield — 241 signals/hr, 3 at risk</div><div class="step-note">Status: BREACH RISK</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">RX</div><div><div class="step-text">ResourceX — 189 signals/hr, 2 anomalies</div><div class="step-note">Status: EXECUTING</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">FO</div><div><div class="step-text">FinOps — 105 signals/hr, 4 anomalies</div><div class="step-note">Status: ACTIVE</div></div></div>
+          </div>
+          <div class="divider"></div>
+          <div class="metric-row">
+            <div class="metric"><div class="metric-val">847</div><div class="metric-lbl">Signals per minute</div></div>
+            <div class="metric"><div class="metric-val">$4.28M</div><div class="metric-lbl">Savings identified</div></div>
+          </div>
+        </div>
+      </div>
+    </div>`
+  },
+  {
+    num:'3', title:'Anomaly detection', sub:'SpendIQ scans invoices, flags duplicates, rates, waste',
+    badge:'Continuous · 312 signals/hr', badgeBg:'var(--color-background-danger)', badgeCol:'var(--color-text-danger)',
+    numBg:'var(--color-background-danger)', numCol:'var(--color-text-danger)',
+    content:`
+    <div class="full-card">
+      <div class="card-title">Navigation path</div>
+      <div class="flow-row">
+        <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">Sidebar</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box" style="background:var(--color-background-danger);color:var(--color-text-danger)">Anomaly Detection</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">10 anomalies table</div>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">10 live anomalies — what they are</div>
+          <div class="step-list">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">!</div><div><div class="step-text">A-001 · Zoom+Webex duplicate — $87,400/yr</div><div class="step-note">Critical · Pending</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">!</div><div><div class="step-text">A-002 · AWS reserved switch — +$342,000/yr</div><div class="step-note">High · Approved</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">!</div><div><div class="step-text">A-003 · Vendor XYZ overcharge — $23,800</div><div class="step-note">Critical · Pending</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">✓</div><div><div class="step-text">A-004 · Zombie EC2s — +$144,000/yr</div><div class="step-note">High · Executed</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">!</div><div><div class="step-text">A-005 · Tableau 340 seats — +$204,000/yr</div><div class="step-note">High · Pending</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Available user actions</div>
+          <div class="step-list">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">F</div><div><div class="step-text">Filter by severity — All / Critical / High</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">M</div><div><div class="step-text">Click "Math" — opens cost impact modal with full calculation</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">A</div><div><div class="step-text">Click "Approve" — marks item approved, routes to execution</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">T</div><div><div class="step-text">Click "Total Impact" — shows $1.16M aggregate modal</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">Cost impact modal — what the math shows</div>
+          <div class="step-list">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">1</div><div><div class="step-text">Itemised cost breakdown with real figures</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">2</div><div><div class="step-text">Break-even timeline calculation</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">3</div><div><div class="step-text">5-year NPV projection</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">4</div><div><div class="step-text">Transition / migration cost estimate</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">5</div><div><div class="step-text">One-click Approve from inside the modal</div></div></div>
+          </div>
+        </div>
+        <div class="warn-box"><p>Anomalies are severity-ranked. Critical items (red) need human action. Executed items (green) are already done — savings are realised.</p></div>
+      </div>
+    </div>`
+  },
+  {
+    num:'4', title:'SLA monitoring & auto-prevention', sub:'SLA Shield watches 5 contracts, acts before breach',
+    badge:'Real-time · 4hr windows', badgeBg:'var(--color-background-danger)', badgeCol:'var(--color-text-danger)',
+    numBg:'var(--color-background-danger)', numCol:'var(--color-text-danger)',
+    content:`
+    <div class="full-card">
+      <div class="card-title">Navigation path</div>
+      <div class="flow-row">
+        <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">Sidebar</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box" style="background:var(--color-background-danger);color:var(--color-text-danger)">SLA Monitor</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">5 contract cards + remediation</div>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">SLA status — 5 contracts</div>
+          <div class="step-list">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">!</div><div><div class="step-text">Acme Corp support — 93.2% vs 98% target</div><div class="step-note">$45K penalty · 4h 12m left</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">!</div><div><div class="step-text">GlobalBank response — 98.1% vs 99.5% target</div><div class="step-note">$120K penalty · 11h 30m left</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">!</div><div><div class="step-text">RetailCo data delivery — 94.1% vs 95%</div><div class="step-note">$22K penalty · 6h 45m left</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">✓</div><div><div class="step-text">FinTech Partners API uptime — 99.92% </div><div class="step-note">Safe · 30 days remaining</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">✓</div><div><div class="step-text">HealthSys Inc reports — 97.8%</div><div class="step-note">Safe · 14 days remaining</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">KPI summary (top of SLA page)</div>
+          <div class="metric-row">
+            <div class="metric"><div class="metric-val">$340K</div><div class="metric-lbl">Penalty exposure</div></div>
+            <div class="metric"><div class="metric-val">$245K</div><div class="metric-lbl">Breaches prevented</div></div>
+            <div class="metric"><div class="metric-val">5</div><div class="metric-lbl">Contracts monitored</div></div>
+            <div class="metric"><div class="metric-val">847/hr</div><div class="metric-lbl">Data signals</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">Auto-remediation already executed</div>
+          <div class="step-list">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">✓</div><div><div class="step-text">Ticket rerouting — 18 tickets redirected to overflow team</div><div class="step-note">Acme Corp · $45K protected · 14:32</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">✓</div><div><div class="step-text">On-call escalation — senior engineer alerted for GlobalBank</div><div class="step-note">P1 SLA clock paused via clause 4.2.1 · 14:28</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">✓</div><div><div class="step-text">Pipeline failover — DR pipeline at 2.1x throughput</div><div class="step-note">RetailCo · $22K protected · 14:25</div></div></div>
+          </div>
+        </div>
+        <div class="suc-box"><p>SLA Shield acts autonomously — no human input needed. It reroutes, escalates, and triggers failovers before the SLA clock hits 100%.</p></div>
+      </div>
+    </div>`
+  },
+  {
+    num:'5', title:'Spend intelligence & vendor analysis', sub:'SpendIQ surfaces rate gaps and consolidation opportunities',
+    badge:'SpendIQ Agent', badgeBg:'var(--color-background-info)', badgeCol:'var(--color-text-info)',
+    numBg:'var(--color-background-info)', numCol:'var(--color-text-info)',
+    content:`
+    <div class="full-card">
+      <div class="card-title">Navigation path</div>
+      <div class="flow-row">
+        <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">Sidebar</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box" style="background:var(--color-background-info);color:var(--color-text-info)">Spend Intelligence</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">Vendor table + opportunities</div>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">Vendor cost table — what's shown</div>
+          <div class="step-list">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">OK</div><div><div class="step-text">AWS — $284,000/mo · +0% vs contract</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">OK</div><div><div class="step-text">Salesforce — $72,400/mo · +0% vs contract</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">~</div><div><div class="step-text">Zoom — $18,200/mo · medium risk (overlap)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">~</div><div><div class="step-text">Webex — $15,800/mo · medium risk (duplicate)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">!</div><div><div class="step-text">Vendor XYZ — $23,800/mo · +23% over contract</div><div class="step-note">Critical — dispute triggered</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">!</div><div><div class="step-text">Tableau — $51,000/mo · high risk (340 idle seats)</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">Rate optimisation panel — 3 opportunities</div>
+          <div class="step-list" style="gap:12px">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">1</div><div><div class="step-text">AWS On-Demand → 1yr Reserved</div><div class="step-note">+$342,000/yr · 48h rate lock · One-click Approve</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">2</div><div><div class="step-text">Azure Blob Hot → Coldline</div><div class="step-note">+$58,000/yr · No commitment required</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">3</div><div><div class="step-text">Zoom + Webex → consolidate on Zoom</div><div class="step-note">+$87,400/yr · Webex renewal in 12 days</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">KPI strip at top of page</div>
+          <div class="metric-row">
+            <div class="metric"><div class="metric-val">847</div><div class="metric-lbl">Invoices scanned</div></div>
+            <div class="metric"><div class="metric-val">$127K</div><div class="metric-lbl">Overcharges found</div></div>
+            <div class="metric"><div class="metric-val">$87.4K</div><div class="metric-lbl">Duplicate costs</div></div>
+            <div class="metric"><div class="metric-val">$342K</div><div class="metric-lbl">Rate savings opp.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>`
+  },
+  {
+    num:'6', title:'Approval queue & human-in-the-loop', sub:'7 pending actions — approve, decline, or review analysis',
+    badge:'Human gate required', badgeBg:'var(--color-background-warning)', badgeCol:'var(--color-text-warning)',
+    numBg:'var(--color-background-warning)', numCol:'var(--color-text-warning)',
+    content:`
+    <div class="full-card">
+      <div class="card-title">Navigation path</div>
+      <div class="flow-row">
+        <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">Sidebar</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box" style="background:var(--color-background-warning);color:var(--color-text-warning)">Approval Queue (7)</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">Action cards with buttons</div>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">5 pending approval items</div>
+          <div class="step-list" style="gap:12px">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">1</div><div><div class="step-text">Terminate 6 idle EC2 instances</div><div class="step-note">+$12,000/mo · Low risk · Reversible</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">2</div><div><div class="step-text">Cancel 340 unused Tableau licences</div><div class="step-note">+$204,000/yr · Contract deadline 5 days</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">3</div><div><div class="step-text">Dispute invoice INV-XYZ-8812</div><div class="step-note">+$23,800 recovery · Net-30 window closing</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">4</div><div><div class="step-text">Migrate AWS On-Demand → Reserved</div><div class="step-note">+$342,000/yr · Rate lock expires 48h</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">5</div><div><div class="step-text">Consolidate Zoom + Webex contracts</div><div class="step-note">+$87,400/yr · Webex renewal in 12 days</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">Per-item actions (3 buttons)</div>
+          <div class="step-list" style="gap:12px">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">A</div><div><div class="step-text">Approve & Execute — action queued, card fades with "Executing..." label</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">R</div><div><div class="step-text">View Analysis — opens detailed math modal for that action</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">D</div><div><div class="step-text">Decline — card greys out, removed from queue, toast shown</div></div></div>
+          </div>
+          <div class="divider"></div>
+          <div class="card-title">Bulk action</div>
+          <div class="step-list">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">B</div><div><div class="step-text">Approve All Low-Risk — fires all items with staggered 200ms animation</div><div class="step-note">Total impact of all 5: +$858,400/yr</div></div></div>
+          </div>
+        </div>
+        <div class="info-box"><p>Risk score determines routing: score under 30 = auto-execute, 30–70 = approval queue (here), over 70 = playbook with human gates.</p></div>
+      </div>
+    </div>`
+  },
+  {
+    num:'7', title:'Playbooks, variance & resources', sub:'Multi-step remediation, Q3 financials, utilisation analysis',
+    badge:'3 views', badgeBg:'var(--color-background-secondary)', badgeCol:'var(--color-text-secondary)',
+    numBg:'var(--color-background-secondary)', numCol:'var(--color-text-secondary)',
+    content:`
+    <div class="cols">
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">Playbooks view</div>
+          <div class="step-list" style="gap:10px">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">✓</div><div><div class="step-text">Step 1 — Identify overlap (auto, done)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">✓</div><div><div class="step-text">Step 2 — Usage analysis (auto, done)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">✓</div><div><div class="step-text">Step 3 — Cost modelling (auto, done)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">→</div><div><div class="step-text">Step 4 — Stakeholder approval (human gate — active)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-tertiary);color:var(--color-text-tertiary)">○</div><div><div class="step-text">Step 5 — Vendor negotiation brief (auto, pending)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-tertiary);color:var(--color-text-tertiary)">○</div><div><div class="step-text">Steps 6–7 — Contract termination + verify (auto)</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">5 available playbooks</div>
+          <div class="tag-row">
+            <span class="tag" style="border-color:var(--color-border-danger);color:var(--color-text-danger)">SLA Breach Prevention</span>
+            <span class="tag">EC2 Rightsizing</span>
+            <span class="tag">Licence Reclamation</span>
+            <span class="tag">Invoice Dispute</span>
+            <span class="tag">Budget Overrun Response</span>
+          </div>
+        </div>
+      </div>
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">Financial variance (Q3)</div>
+          <div class="step-list" style="gap:8px">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">↑</div><div><div class="step-text">Cloud infra — +$232,000 over budget (19.3%)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">↑</div><div><div class="step-text">SaaS licences — +$87,000 over (10.4%)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">↑</div><div><div class="step-text">Marketing — +$180,000 over (27.7%)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">↓</div><div><div class="step-text">Vendor services — –$22,000 under (favourable)</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">↓</div><div><div class="step-text">People & benefits — –$20,000 under</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Resource optimisation</div>
+          <div class="step-list" style="gap:8px">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">23%</div><div><div class="step-text">EC2 fleet — $48,200/mo waste · rightsize 14 instances</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">41%</div><div><div class="step-text">Tableau — $204,000/yr · reclaim 340 licences</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">67%</div><div><div class="step-text">S3 storage — executing cold-tier migration</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">✓</div><div><div class="step-text">Azure dev VMs — off-hours shutdown done</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>`
+  },
+  {
+    num:'8', title:'AI chat — ask NEXUS anything', sub:'GPT-4o-mini with full enterprise context loaded',
+    badge:'OpenAI GPT-4o-mini', badgeBg:'var(--color-background-success)', badgeCol:'var(--color-text-success)',
+    numBg:'var(--color-background-success)', numCol:'var(--color-text-success)',
+    content:`
+    <div class="full-card">
+      <div class="card-title">How to open</div>
+      <div class="flow-row">
+        <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">Topbar</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box" style="background:var(--color-background-info);color:var(--color-text-info)">Ask NEXUS AI</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box" style="background:var(--color-background-secondary);color:var(--color-text-primary)">Right-side chat panel</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box" style="background:var(--color-background-success);color:var(--color-text-success)">Type + Enter</div>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">What context is loaded into every message</div>
+          <div class="step-list" style="gap:8px">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">$</div><div><div class="step-text">Full financial summary — savings, anomalies, SLA exposure</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">A</div><div><div class="step-text">7 active anomalies with dollar values</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">S</div><div><div class="step-text">SLA status — all 3 at-risk contracts</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">G</div><div><div class="step-text">All 4 agent statuses and signal rates</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-info);color:var(--color-text-info)">H</div><div><div class="step-text">Full conversation history for multi-turn answers</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Example questions to ask</div>
+          <div class="step-list" style="gap:8px">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">?</div><div><div class="step-text">"What is our single biggest cost leak right now?"</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">?</div><div><div class="step-text">"Generate a vendor consolidation playbook for Zoom vs Webex"</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">?</div><div><div class="step-text">"Show me the ROI math if I approve all 7 pending actions"</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">?</div><div><div class="step-text">"Why is our cloud spend over budget?"</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">?</div><div><div class="step-text">"Which SLA will breach first and what's the penalty?"</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col1">
+        <div class="card">
+          <div class="card-title">Technical API flow</div>
+          <div class="step-list" style="gap:10px">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">1</div><div><div class="step-text">User types message → Enter</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">2</div><div><div class="step-text">Message added to conversationHistory array</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">3</div><div><div class="step-text">callOpenAIAPI() builds messages array: system + history + new</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">4</div><div><div class="step-text">POST to api.openai.com/v1/chat/completions with gpt-4o-mini</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">5</div><div><div class="step-text">Thinking dots shown while awaiting response</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-success);color:var(--color-text-success)">6</div><div><div class="step-text">Response renders with dollar amounts highlighted in green</div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Error handling</div>
+          <div class="step-list" style="gap:8px">
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-danger);color:var(--color-text-danger)">!</div><div><div class="step-text">HTTP 401 → "Invalid key" message + re-enter prompt</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-warning);color:var(--color-text-warning)">!</div><div><div class="step-text">HTTP 429 → "Quota exceeded" + billing link shown</div></div></div>
+            <div class="step-item"><div class="step-dot" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">!</div><div><div class="step-text">No key → modal auto-opens before first message sends</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="suc-box"><p>Cost: ~$0.0001 per message (GPT-4o-mini). A full 30-min demo with 100 messages costs less than ₹1. $5 credit = approximately 50,000 messages.</p></div>`
+  }
+];
+
+let cur = 0;
+
+function renderNav() {
+  const nb = document.getElementById('navBar');
+  nb.innerHTML = phases.map((p,i) =>
+    `<div class="nav-pill${i===cur?' active':''}" onclick="goPhase(${i})">Phase ${p.num}: ${p.title.split('&')[0].trim()}</div>`
+  ).join('');
+}
+
+function renderPhase() {
+  const p = phases[cur];
+  const container = document.getElementById('phaseContainer');
+  const pct = Math.round(((cur+1)/phases.length)*100);
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progLabel').textContent = `Phase ${cur+1} of ${phases.length}`;
+  document.getElementById('btnPrev').disabled = cur === 0;
+  document.getElementById('btnNext').disabled = cur === phases.length - 1;
+  document.getElementById('btnNext').textContent = cur === phases.length-1 ? 'Done' : 'Next →';
+
+  container.innerHTML = `
+    <div class="phase active">
+      <div class="phase-header">
+        <div class="phase-num" style="background:${p.numBg};color:${p.numCol}">${p.num}</div>
+        <div class="phase-meta">
+          <div class="phase-title">${p.title}</div>
+          <div class="phase-sub">${p.sub}</div>
+          <div class="phase-badge" style="background:${p.badgeBg};color:${p.badgeCol}">${p.badge}</div>
+        </div>
+      </div>
+      ${p.content}
+    </div>`;
+  renderNav();
+}
+
+function goPhase(n) {
+  if (n < 0 || n >= phases.length) return;
+  cur = n;
+  renderPhase();
+}
+
+renderPhase();
+</script>
