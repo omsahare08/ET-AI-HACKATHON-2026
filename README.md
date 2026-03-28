@@ -159,7 +159,7 @@ cd nexus-cost-intelligence
 
 ```bash
 # Option A: Direct open (works for most features)
-open index.html
+open Nexus.html
 
 # Option B: Local server (recommended — avoids CORS issues)
 python -m http.server 8000
@@ -255,7 +255,7 @@ python -m http.server 8000
 ```
 nexus-cost-intelligence/
 │
-├── index.html                      # Entire application — single file
+├── Nexus.html                      # Entire application — single file
 │
 ├── README.md                       # This file
 │
